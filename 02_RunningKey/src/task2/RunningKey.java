@@ -311,11 +311,13 @@ public class RunningKey extends Cipher {
             }
         }
 
-
+        // lol java
         public Iterator<List<AbstractMap.SimpleEntry<Integer, Integer>>> combinations(String cipher, int offset, int length) {
-            AbstractMap.SimpleEntry<Integer, Integer>[][] possible_pieces = (AbstractMap.SimpleEntry<Integer, Integer>[][]) new AbstractMap.SimpleEntry[length][];
+            AbstractMap.SimpleEntry<Integer, Integer>[][] possible_pieces =
+                (AbstractMap.SimpleEntry<Integer, Integer>[][]) new AbstractMap.SimpleEntry[length][];
             for(int i = 0; i < length; i++) {
-                AbstractMap.SimpleEntry<Integer, Integer>[] prototype = (AbstractMap.SimpleEntry<Integer, Integer>[]) new AbstractMap.SimpleEntry[0];
+                AbstractMap.SimpleEntry<Integer, Integer>[] prototype = 
+                    (AbstractMap.SimpleEntry<Integer, Integer>[]) new AbstractMap.SimpleEntry[0];
                 possible_pieces[i] = sumpieces[charMap.mapChar(cipher.charAt(i+offset))].toArray(prototype);
             }
 
@@ -341,7 +343,7 @@ public class RunningKey extends Cipher {
             }
         }
 
-        public PriorityQueue<ScoredThingie> topN(String inp, int n, double[] weights) {
+        public TreeSet<ScoredThingie> topN(String inp, int n, double[] weights) {
             PriorityQueue<ScoredThingie> ret = new PriorityQueue<ScoredThingie>();
 
             Iterator<List<AbstractMap.SimpleEntry<Integer, Integer>>> it = combinations(inp, 0, inp.length());
@@ -349,39 +351,36 @@ public class RunningKey extends Cipher {
             int c1 = 0, c2 = 0;
             int i = 0;
             while(it.hasNext()) {
-                entryToArrays(it.next(), a, b);
+                List<AbstractMap.SimpleEntry<Integer, Integer>> x = it.next();
+                for(int j = 0; j < x.size(); j++) {
+                    a[j] = (char) charMap.remapChar(x.get(j).getKey());
+                    b[j] = (char) charMap.remapChar(x.get(j).getValue());
+                }
                 // rough scoring
                 double score = score(a, b, weights);
-                // System.out.println(new ScoredThingie(score, new String(a), new String(b)));
-                if(ret.isEmpty() || score > ret.peek().score) {
-                    if(ret.size() >= n)
+                if(i++ < n || score > ret.peek().score) {
+                    if(i > n)
                         ret.poll();
                     ret.add(new ScoredThingie(score, new String(a), new String(b)));
                 }
             }
 
-            return ret;
+            return new TreeSet(ret);
         }
 
-        public static void main_topN(String[] args) {
+        public static void main(String[] args) {
             RunningKey k = new RunningKey(26);
 
-            PriorityQueue<ScoredThingie> q = k.topN("john", 50, new double[] { 1.0d, 3.0d, 8.0d });
-            while(!q.isEmpty())
-                System.out.println(q.poll());
-        }
-
-        public void entryToArrays(List<AbstractMap.SimpleEntry<Integer, Integer>> in, char[] a, char[] b) {
-            for(int i = 0; i < in.size(); i++) {
-                a[i] = (char) charMap.remapChar(in.get(i).getKey());
-                b[i] = (char) charMap.remapChar(in.get(i).getValue());
+            TreeSet<ScoredThingie> q = k.topN("john", 10, new double[] { 1.0d, 3.0d, 8.0d });
+            while(!q.isEmpty()) {
+                ScoredThingie tmp = q.pollFirst();
+                System.out.println(tmp);
             }
         }
 
         public double score(char[] plain, char[] cipher, double[] weights) {
             return singlescore(plain, weights) * singlescore(cipher, weights);
         }
-
 
         public double singlescore(char[] snippet, double[] weights) {
 
