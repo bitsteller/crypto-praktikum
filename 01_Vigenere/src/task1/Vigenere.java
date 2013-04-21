@@ -19,6 +19,7 @@ import java.util.Vector;
 
 import de.tubs.cs.iti.jcrypt.chiffre.CharacterMapping;
 import de.tubs.cs.iti.jcrypt.chiffre.Cipher;
+import de.tubs.cs.iti.jcrypt.chiffre.FrequencyTables;
 
 /**
  * Dummy-Klasse für die Vigenère-Chiffre.
@@ -45,43 +46,42 @@ public class Vigenere extends Cipher {
 
 	}
 
-        /**
-         * Friedmann test
-         *
-         * http://en.wikipedia.org/wiki/Vigen%C3%A8re_cipher#Friedman_test
-         */
-        public double friedmann(BufferedReader ciphertext) throws IOException {
+	/**
+	 * Friedmann test
+	 * 
+	 * http://en.wikipedia.org/wiki/Vigen%C3%A8re_cipher#Friedman_test
+	 */
+	public double friedmann(BufferedReader ciphertext) throws IOException {
 
-            int[] freqs = new int[modulus];
-            double total = 0;
-            { // find all character frequencies
-                int character;
-                while ((character = ciphertext.read()) != -1) {
-                    character = charMap.mapChar(character);
-                    freqs[character] += 1;
-                    total += 1;
-                }
-            }
+		int[] freqs = new int[modulus];
+		double total = 0;
+		{ // find all character frequencies
+			int character;
+			while ((character = ciphertext.read()) != -1) {
+				character = charMap.mapChar(character);
+				freqs[character] += 1;
+				total += 1;
+			}
+		}
 
-            int sum = 0;
-            { // sum up frequencies
-                for(int i = 0; i < freqs.length; i++)
-                    sum += freqs[i]*(freqs[i]-1);
-            }
+		int sum = 0;
+		{ // sum up frequencies
+			for (int i = 0; i < freqs.length; i++)
+				sum += freqs[i] * (freqs[i] - 1);
+		}
 
-            return sum / total*(total-1);
-        }
+		return sum / total * (total - 1);
+	}
 
-        public double randomDistribution() {
+	public double randomDistribution() {
+		double[] ft = FrequencyTables.getNGramsAsArray(1, charMap);
+		double sum = 0;
 
-            switch(modulus) {
-                case 26: return 0.0773428514;
-            }
-
-            assert(false);
-            return 0;
-
-        }
+		for (int i = 0; i < modulus; i++) {
+			sum += ft[i]/100 * ft[i]/100;
+		}
+		return sum;
+	}
 
 	/**
 	 * Entschlüsselt den durch den Reader <code>ciphertext</code> gegebenen

@@ -341,7 +341,6 @@ public final class Caesar extends Cipher {
    * @see #writeKey writeKey
    */
   public void readKey(BufferedReader key) {
-
     try {
       StringTokenizer st = new StringTokenizer(key.readLine(), " ");
       modulus = Integer.parseInt(st.nextToken());
