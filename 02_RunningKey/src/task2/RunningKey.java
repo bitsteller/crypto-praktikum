@@ -312,10 +312,15 @@ public class RunningKey extends Cipher {
             return new Combinator<AbstractMap.SimpleEntry<Integer, Integer>>(possible_pieces);
         }
 
-//        public static void main(String[] args) {
-//            RunningKey k = new RunningKey(26);
-//            k.combinations("abcd", 0, 4);
-//        }
+        static class ScoredThingie {
+            String ctext, ptext;
+            double score;
+        }
+
+        public ScoredThingie[] topN(String inp, int n, double[] weights) {
+            ScoredThingie[] ret = new ScoredThingie[n];
+            return ret;
+        }
 
         public double score(String plain, String cipher, int offset, int length, double[] weights) {
             return singlescore(plain, offset, length, weights) * singlescore(cipher, offset, length, weights);
