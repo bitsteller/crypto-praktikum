@@ -60,6 +60,9 @@ public class RunningKey extends Cipher {
 			StringTokenizer stWeights = new StringTokenizer(
 					in.readLine(), " ");
 			for (int i = 0; i < 3; i++) {
+				if (stWeights.hasMoreTokens() != false) {
+					System.out.println("Error: You have to enter excatly 3 weights!");
+				}
 				weights[i] = Double.parseDouble(stWeights.nextToken());
 			}
 			System.out.println("start position:");
@@ -82,7 +85,6 @@ public class RunningKey extends Cipher {
 						start = Integer.parseInt(in.readLine());
 						if (start >= ciphertext.length() | start < 0) {
 							System.out.println("Error: position has to be smaller than text length and bigger than 0");
-
 						}
 					} catch (NumberFormatException e1) {
 						start = 0;
