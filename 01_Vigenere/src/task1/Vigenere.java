@@ -58,6 +58,40 @@ public class Vigenere extends Cipher {
 
         }
 
+        public int[] breakCaesar(String ciphertext, int period) {
+            int shift = 0;
+
+            Integer[] shifts = new Integer[modulus];
+            { // find all character frequencies
+                final int[] freqs = new int[modulus];
+                for (int i = 0; i < ciphertext.length(); i += period) {
+                    freqs[charMap.mapChar(ciphertext.charAt(i))] += 1;
+                }
+
+                double N = ciphertext.length();
+                // for (int i = 0; i < freqs.length; i++) {
+                    // freqs[i] /= (N/period);
+                // }
+
+                for(int i = 0; i < modulus; i++)
+                    shifts[i] = i;
+                Arrays.sort(shifts, new Comparator<Integer>() {
+                    public int compare(Integer a, Integer b) {
+                        return freqs[b] -freqs[a];
+                    }
+                });
+            }
+
+            int[] ret = new int[modulus];
+            { // correlate shifts by frequencies
+                ArrayList<NGram> nGrams = FrequencyTables.getNGramsAsList(1, charMap);
+                for(int i = 0; i < modulus; i++)
+                    ret[i] = shifts[i] -charMap.mapChar(Integer.parseInt(nGrams.get(i).getIntegers()));
+            }
+
+            return ret;
+        }
+
         /**
          * Approximate period length of an input text
          */
@@ -94,15 +128,6 @@ public class Vigenere extends Cipher {
 
             return sum / N*(N-1.0d);
         }
-
-		int sum = 0;
-		{ // sum up frequencies
-			for (int i = 0; i < freqs.length; i++)
-				sum += freqs[i] * (freqs[i] - 1);
-		}
-
-		return sum / total * (total - 1);
-	}
 
 	public double randomDistribution() {
 		double[] ft = FrequencyTables.getNGramsAsArray(1, charMap);
