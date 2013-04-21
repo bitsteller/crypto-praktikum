@@ -244,7 +244,43 @@ public class RunningKey extends Cipher {
 
 	}
 
-        public double score(String snippet, int offset, int length, double[] weights) {
+        // took me a frickin' hour to write this one!
+        static private class Combinator<T> implements Iterator<List<T>> {
+            T[][] source;
+            int step, max;
+            boolean finished = false;
+
+            Combinator(T[][] source) {
+                this.source = source;
+                this.max = source[0].length;
+                for(int i = 1; i < source.length; i++)
+                    this.max *= source[i].length;
+            }
+            public boolean hasNext() {
+                return step < max;
+            }
+            public List<T> next() {
+                List<T> tmp = new ArrayList<T>(source.length);
+                int step = this.step;
+                for(int i = 0; i < source.length; i++) {
+                    tmp.add(source[i][step % source[i].length]);
+                    step = step / source[i].length;
+                }
+                this.step += 1;
+                return tmp;
+            }
+            public void remove() {
+                step += 1;
+            }
+        }
+
+        public static void main_combinator(String[] args) {
+            Integer[][] x = new Integer[][] { { 1, 2, 3 }, {4, 5}, {5, 6} };
+            Combinator<Integer> it = new Combinator(x);
+            while(it.hasNext())
+                System.out.println(it.next());
+        }
+
 
             double score = 0.0d;
 
