@@ -72,6 +72,17 @@ public class Vigenere extends Cipher {
             return sum / total*(total-1);
         }
 
+        public double randomDistribution() {
+
+            switch(modulus) {
+                case 26: return 0.0773428514;
+            }
+
+            assert(false);
+            return 0;
+
+        }
+
 	/**
 	 * Entschlüsselt den durch den Reader <code>ciphertext</code> gegebenen
 	 * Chiffretext und schreibt den Klartext mit dem Writer
