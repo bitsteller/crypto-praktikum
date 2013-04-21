@@ -274,13 +274,28 @@ public class RunningKey extends Cipher {
             }
         }
 
-        public static void main_combinator(String[] args) {
-            Integer[][] x = new Integer[][] { { 1, 2, 3 }, {4, 5}, {5, 6} };
-            Combinator<Integer> it = new Combinator(x);
-            while(it.hasNext())
-                System.out.println(it.next());
+
+        public Iterator<List<AbstractMap.SimpleEntry<Integer, Integer>>> combinations(String cipher, int offset, int length) {
+            AbstractMap.SimpleEntry<Integer, Integer>[][] possible_pieces = (AbstractMap.SimpleEntry<Integer, Integer>[][]) new AbstractMap.SimpleEntry[length][];
+            for(int i = 0; i < length; i++) {
+                AbstractMap.SimpleEntry<Integer, Integer>[] prototype = (AbstractMap.SimpleEntry<Integer, Integer>[]) new AbstractMap.SimpleEntry[0];
+                possible_pieces[i] = sumpieces[charMap.mapChar(cipher.charAt(i+offset))].toArray(prototype);
+            }
+
+            return new Combinator<AbstractMap.SimpleEntry<Integer, Integer>>(possible_pieces);
         }
 
+        public static void main(String[] args) {
+            RunningKey k = new RunningKey(26);
+            k.combinations("abcd", 0, 4);
+        }
+
+        public double score(String plain, String cipher, int offset, int length, double[] weights) {
+            return singlescore(plain, offset, length, weights) * singlescore(cipher, offset, length, weights);
+        }
+
+
+        public double singlescore(String snippet, int offset, int length, double[] weights) {
 
             double score = 0.0d;
 
@@ -339,6 +354,13 @@ public class RunningKey extends Cipher {
                 System.out.println(x);
             }
 
+        }
+
+        public static void main_combinator(String[] args) {
+            Integer[][] x = new Integer[][] { { 1, 2, 3 }, {4, 5}, {5, 6} };
+            Combinator<Integer> it = new Combinator(x);
+            while(it.hasNext())
+                System.out.println(it.next());
         }
 
 }
