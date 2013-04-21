@@ -51,6 +51,15 @@ public class Vigenere extends Cipher {
                     }
                     ciphertext = tmp2.toString();
                 }
+                int d = (int) Math.round(approxPeriodLength(ciphertext));
+            	Vector<Integer> possibleKey = new Vector<Integer>();
+            	for (int i = 0; i < d; i++) {
+            		possibleKey.add(breakCeasar(ciphertext.substring(i),d));
+            	}
+            	this.keys = possibleKey;
+            	this.decipher(inbuf, cleartext);
+            	
+                
             } catch(IOException e) {
                 e.printStackTrace();
                 return;
@@ -102,7 +111,7 @@ public class Vigenere extends Cipher {
             int N = ciphertext.length();
 
             return ( (randDist - 1.0/modulus) * N ) / ( (N-1)*IC - (1.0/modulus*N) + randDist);
-
+            
         }
 
         /**
