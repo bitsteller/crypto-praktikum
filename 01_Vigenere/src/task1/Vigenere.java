@@ -203,7 +203,7 @@ public class Vigenere extends Cipher {
             { // correlate shifts by frequencies
                 ArrayList<NGram> nGrams = FrequencyTables.getNGramsAsList(1, charMap);
                 for(int i = 0; i < modulus; i++)
-                    ret[i] = shifts[i] -charMap.mapChar(Integer.parseInt(nGrams.get(i).getIntegers()));
+                    ret[i] = (shifts[i] +modulus -charMap.mapChar(Integer.parseInt(nGrams.get(i).getIntegers()))) % modulus;
             }
 
             return ret;
