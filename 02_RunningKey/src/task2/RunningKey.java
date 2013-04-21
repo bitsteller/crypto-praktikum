@@ -160,9 +160,9 @@ public class RunningKey extends Cipher {
 				new FileWriter(args[2])) : new BufferedWriter(new PrintWriter(
 				System.out));
 
-		RunningKey v = new RunningKey();
-		v.readKey(new BufferedReader(new StringReader("26 keystream.txt\n"))); // FIXME
-		v.charMap = new CharacterMapping(v.modulus);
+		RunningKey v = new RunningKey(26);
+		// v.readKey(new BufferedReader(new StringReader("26 keystream.txt\n"))); // FIXME?
+		// v.charMap = new CharacterMapping(v.modulus);
 
 		switch (args[0]) {
 		case "encipher":
@@ -227,9 +227,7 @@ public class RunningKey extends Cipher {
         }
 
         public static void main_testpieces(String[] args) {
-            RunningKey k = new RunningKey();
-            k.modulus = 26;
-            k.generateSumPieces();
+            RunningKey k = new RunningKey(26);
 
             Iterator<AbstractMap.SimpleEntry<Integer, Integer>> it = k.sumpieces[17].iterator();
             AbstractMap.SimpleEntry<Integer, Integer> x;
