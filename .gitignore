@@ -8,3 +8,4 @@
 #Eclipse Rotz
 .metadata
 .DS_Store
+*.prefs

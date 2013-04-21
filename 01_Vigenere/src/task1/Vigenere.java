@@ -16,6 +16,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.StringTokenizer;
 
+import de.tubs.cs.iti.jcrypt.chiffre.CharacterMapping;
 import de.tubs.cs.iti.jcrypt.chiffre.Cipher;
 
 /**
@@ -78,8 +79,81 @@ public class Vigenere extends Cipher {
    * @see #writeKey writeKey
    */
   public void makeKey() {
-
-    System.out.println("Dummy f√ºr die Schl√ºsselerzeugung.");
+	  BufferedReader standardInput = launcher.openStandardInput();
+	    boolean accepted = false;
+	    String msg = "Geeignete Werte für den Modulus werden in der Klasse "
+	        + "'CharacterMapping'\nfestgelegt. Probieren Sie ggf. einen Modulus "
+	        + "von 26, 27, 30 oder 31.\nDie Verschiebung muß größer oder gleich 0 "
+	        + "und kleiner als der gewählte\nModulus sein.";
+	    System.out.println(msg);
+	    // Frage jeweils solange die Eingabe ab, bis diese akzeptiert werden kann.
+	    do {
+	      System.out.print("Geben Sie den Modulus ein: ");
+	      try {
+	        modulus = Integer.parseInt(standardInput.readLine());
+	        if (modulus < 1) {
+	          System.out.println("Ein Modulus < 1 wird nicht akzeptiert. Bitte "
+	              + "korrigieren Sie Ihre Eingabe.");
+	        } else {
+	          // Prüfe, ob zum eingegebenen Modulus ein Default-Alphabet existiert.
+	          String defaultAlphabet = CharacterMapping.getDefaultAlphabet(modulus);
+	          if (!defaultAlphabet.equals("")) {
+	            msg = "Vordefiniertes Alphabet: '" + defaultAlphabet
+	                + "'\nDieses vordefinierte Alphabet kann durch Angabe einer "
+	                + "geeigneten Alphabet-Datei\nersetzt werden. Weitere "
+	                + "Informationen finden Sie im Javadoc der Klasse\n'Character"
+	                + "Mapping'.";
+	            System.out.println(msg);
+	            accepted = true;
+	          } else {
+	            msg = "Warnung: Dem eingegebenen Modulus kann kein Default-"
+	                + "Alphabet zugeordnet werden.\nErstellen Sie zusätzlich zu "
+	                + "dieser Schlüssel- eine passende Alphabet-Datei.\nWeitere "
+	                + "Informationen finden Sie im Javadoc der Klasse 'Character"
+	                + "Mapping'.";
+	            System.out.println(msg);
+	            accepted = true;
+	          }
+	        }
+	      } catch (NumberFormatException e) {
+	        System.out.println("Fehler beim Parsen des Modulus. Bitte korrigieren"
+	            + " Sie Ihre Eingabe.");
+	      } catch (IOException e) {
+	        System.err
+	            .println("Abbruch: Fehler beim Lesen von der Standardeingabe.");
+	        e.printStackTrace();
+	        System.exit(1);
+	      }
+	    } while (!accepted);
+	    accepted = true;
+	    do {
+	      try {
+		    keys.clear();
+	        System.out.print("Geben Sie die durch Leerzeichen getrennten Keys ein: ");
+	        StringTokenizer stKeys = new StringTokenizer(standardInput.readLine(), " ");
+	        while (stKeys.hasMoreElements()) {
+	        	int key = Integer.parseInt(stKeys.nextToken());
+	        	if (key >=0 && key < modulus) {
+	        		this.keys.add(key);
+	        	}
+	        	else {
+	  	          System.out.println("Error: " + key + "is an invald key (key must be >= 0 and < modulus)");
+		        	accepted = false;
+	        	}
+	        }
+	        if (keys.size() == 0) {
+	        	accepted = false;
+	        }
+	      } catch (NumberFormatException e) {
+	        System.out.println("Fehler beim Parsen der Verschiebung. Bitte "
+	            + "korrigieren Sie Ihre Eingabe.");
+	      } catch (IOException e) {
+	        System.err
+	            .println("Abbruch: Fehler beim Lesen von der Standardeingabe.");
+	        e.printStackTrace();
+	        System.exit(1);
+	      }
+	    } while (!accepted);
   }
 
   /**
