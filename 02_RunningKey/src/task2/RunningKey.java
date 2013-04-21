@@ -74,17 +74,17 @@ public class RunningKey extends Cipher {
 			}
 
 			String lastCipher = "";
-			SortedSet<ScoredThingie> results = null;
+			ScoredThingie[] results = new ScoredThingie[5];
 			while (true) {
 				String cipherSubstring = ciphertext.substring(start, start + len); 
 				System.out.println(cipherSubstring);
 				if (!cipherSubstring.equals(lastCipher)) {
-					results = this.topN(cipherSubstring, 5, weights);
+					this.topN(cipherSubstring, 5, weights).toArray(results);
 					lastCipher = cipherSubstring;
 				}
-				System.out.println(results[keyIndex].ctext);
-				System.out.println(results[keyIndex].ptext);
-				System.out.println("Score: " + results[keyIndex].score);
+				System.out.println(results[4-keyIndex].ctext);
+				System.out.println(results[4-keyIndex].ptext);
+				System.out.println("Score: " + results[4-keyIndex].score);
 
 				switch (in.readLine().charAt(0)) {
 				case 'q':
