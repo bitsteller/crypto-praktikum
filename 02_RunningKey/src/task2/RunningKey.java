@@ -74,12 +74,12 @@ public class RunningKey extends Cipher {
 			}
 
 			String lastCipher = "";
-			ScoredThingie[] results = new ScoredThingie[5];
+			SortedSet<ScoredThingie> results = null;
 			while (true) {
 				String cipherSubstring = ciphertext.substring(start, start + len); 
 				System.out.println(cipherSubstring);
 				if (!cipherSubstring.equals(lastCipher)) {
-					this.topN(cipherSubstring, 5, weights).toArray(results);
+					results = this.topN(cipherSubstring, 5, weights);
 					lastCipher = cipherSubstring;
 				}
 				System.out.println(results[keyIndex].ctext);
