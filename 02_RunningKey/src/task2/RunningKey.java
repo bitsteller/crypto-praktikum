@@ -105,6 +105,18 @@ public class RunningKey extends Cipher {
 						len = 4;
 						e1.printStackTrace();
 					}
+				case 'k':
+					System.out.println("new key (0..4), where 0 is the key with the highest probability:");
+					try {
+						key = Integer.parseInt(in.readLine());
+						if (key < 0 | key > 4) {
+							key = 0;
+							System.out.println("Error: key has to between 0 and 4");
+						}
+					} catch (NumberFormatException e1) {
+						len = 4;
+						e1.printStackTrace();
+					}
 				}
 			}
 		} catch (IOException e) {
