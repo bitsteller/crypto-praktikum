@@ -38,7 +38,20 @@ public class RunningKey extends Cipher {
 	 *            Der Writer, der den Klartext schreiben soll.
 	 */
 	public void breakCipher(BufferedReader ciphertext, BufferedWriter cleartext) {
-
+		BufferedReader standardInput = launcher.openStandardInput();
+		
+		System.out.println("Please enter your space sperated weights g1 g2 g3:");
+		try {
+			StringTokenizer stWeights = new StringTokenizer(
+					standardInput.readLine(), " ");
+			double [] weights = new double[3];
+			for (int i = 0; i < 3; i++) {
+				weights[i] = (Double) stWeights.nextElement();
+			}
+		} catch (IOException e) {
+			System.out.println("Could not parse your freaking input.");
+			e.printStackTrace();
+		}
 	}
 
 	/**
