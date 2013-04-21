@@ -56,8 +56,7 @@ public class RunningKey extends Cipher {
 			int keyIndex = 0;
 			int len = 4;
 
-			System.out
-					.println("Please enter your space sperated weights g1 g2 g3:");
+			System.out.println("Please enter your space sperated weights g1 g2 g3:");
 			StringTokenizer stWeights = new StringTokenizer(
 					in.readLine(), " ");
 			for (int i = 0; i < 3; i++) {
