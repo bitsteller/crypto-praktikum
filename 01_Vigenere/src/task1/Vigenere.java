@@ -96,7 +96,9 @@ public class Vigenere extends Cipher {
                         case 'q':
                             return;
                         case 'h':
-                            System.out.println("q: quit\nh: help\no:output\nwasd: move cursor");
+                            System.out.println("q: quit\nh: help\no: output text\np: show candidates");
+                            System.out.println("wasd: move cursor");
+                            System.out.println("xc: change period");
                             break;
                         case 'p':
                             for (int i = 0; i < d; i++) {
