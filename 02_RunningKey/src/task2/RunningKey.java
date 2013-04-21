@@ -37,16 +37,59 @@ public class RunningKey extends Cipher {
 	 * @param cleartext
 	 *            Der Writer, der den Klartext schreiben soll.
 	 */
-	public void breakCipher(BufferedReader ciphertext, BufferedWriter cleartext) {
-		BufferedReader standardInput = launcher.openStandardInput();
-		
-		System.out.println("Please enter your space sperated weights g1 g2 g3:");
+	public void breakCipher(BufferedReader inbuf, BufferedWriter outbuf) {
 		try {
+            BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+
+			String ciphertext;
+			{ // read ciphertext into a string
+				String tmp;
+				StringBuilder tmp2 = new StringBuilder();
+				while ((tmp = inbuf.readLine()) != null) {
+					tmp2.append(tmp);
+				}
+				ciphertext = tmp2.toString();
+			}
+
+			double[] weights = new double[3];
+			int start = 0;
+			int key = 0;
+
+			System.out
+					.println("Please enter your space sperated weights g1 g2 g3:");
 			StringTokenizer stWeights = new StringTokenizer(
-					standardInput.readLine(), " ");
-			double [] weights = new double[3];
+					in.readLine(), " ");
 			for (int i = 0; i < 3; i++) {
-				weights[i] = (Double) stWeights.nextElement();
+				weights[i] = Double.parseDouble(stWeights.nextToken());
+			}
+			System.out.println("start position:");
+			try {
+				start = Integer.parseInt(in.readLine());
+			} catch (NumberFormatException e1) {
+				start = 0;
+				e1.printStackTrace();
+			}
+
+			while (true) {
+				String cipherSubstring = ciphertext.substring(start, start+4); //TODO remove hardcoded length
+				System.out.println(cipherSubstring);
+				switch (in.readLine().charAt(0)) {
+				case 'q':
+					return;
+				case 'p':
+					System.out.println("start position:");
+					try {
+						start = Integer.parseInt(in.readLine());
+						if (start >= ciphertext.length() | start < 0) {
+							System.out.println("Error: position has to be smaller than text length and bigger than 0");
+
+						}
+					} catch (NumberFormatException e1) {
+						start = 0;
+						e1.printStackTrace();
+					}
+					break;
+				}
 			}
 		} catch (IOException e) {
 			System.out.println("Could not parse your freaking input.");
