@@ -246,7 +246,7 @@ public class Vigenere extends Cipher {
    */
   public void writeKey(BufferedWriter key) {
 	    try {
-	        key.write(modulus);
+	        key.write(String.valueOf(modulus));
 	        for (int k: keys) {
 	        	key.write(" " + k);
 	        }
