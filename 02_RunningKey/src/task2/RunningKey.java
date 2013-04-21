@@ -302,7 +302,7 @@ public class RunningKey extends Cipher {
             for(int d = 0; d < nGrams.length; d++) {
                 double sub = 0.0d;
                 for(int i = 0; i < length-(d+1); i++) {
-                    Double k = nGrams[d].get(snippet.substring(i, i+d+1));
+                    Double k = nGrams[d].get(snippet.substring(offset+i, offset+i+d+1));
                     if(k != null)
                         sub += k;
                 }
