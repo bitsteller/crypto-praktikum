@@ -216,18 +216,20 @@ public class Vigenere extends Cipher {
 
                 for(int i = 0; i < modulus; i++)
                     shifts[i] = i;
+
                 Arrays.sort(shifts, new Comparator<Integer>() {
                     public int compare(Integer a, Integer b) {
                         return freqs[b] -freqs[a];
                     }
                 });
+
             }
 
             int[] ret = new int[modulus];
             { // correlate shifts by frequencies
                 ArrayList<NGram> nGrams = FrequencyTables.getNGramsAsList(1, charMap);
                 for(int i = 0; i < modulus; i++)
-                    ret[i] = (shifts[i] +modulus -charMap.mapChar(Integer.parseInt(nGrams.get(i).getIntegers()))) % modulus;
+                    ret[i] = (shifts[0] +modulus -charMap.mapChar(Integer.parseInt(nGrams.get(i).getIntegers()))) % modulus;
             }
 
             return ret;
