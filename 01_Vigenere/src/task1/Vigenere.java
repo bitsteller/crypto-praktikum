@@ -49,8 +49,10 @@ public class Vigenere extends Cipher {
                     }
                     ciphertext = tmp2.toString();
                 }
+
                 // expected period
                 int d = (int) Math.round(approxPeriodLength(ciphertext));
+
                 // keys
                 int[][] candidates = new int[d][modulus];
                 for (int i = 0; i < d; i++)
@@ -469,13 +471,13 @@ public class Vigenere extends Cipher {
 		} catch (IOException e) {
 			System.err
 					.println("Abbruch: Fehler beim Lesen oder SchlieÃen der "
-							+ "Schlüsseldatei.");
+							+ "Schlüsseldatei.");
 			e.printStackTrace();
 			System.exit(1);
 		} catch (NumberFormatException e) {
 			System.err
 					.println("Abbruch: Fehler beim Parsen eines Wertes aus der "
-							+ "Schlüsseldatei.");
+							+ "Schlüsseldatei.");
 			e.printStackTrace();
 			System.exit(1);
 		}
