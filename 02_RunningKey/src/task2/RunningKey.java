@@ -61,7 +61,7 @@ public class RunningKey extends Cipher {
 			StringTokenizer stWeights = new StringTokenizer(
 					in.readLine(), " ");
 			for (int i = 0; i < 3; i++) {
-				if (stWeights.hasMoreTokens() != false) {
+				if (stWeights.hasMoreTokens() == false) {
 					System.out.println("Error: You have to enter excatly 3 weights!");
 				}
 				weights[i] = Double.parseDouble(stWeights.nextToken());
@@ -299,10 +299,10 @@ public class RunningKey extends Cipher {
             return new Combinator<AbstractMap.SimpleEntry<Integer, Integer>>(possible_pieces);
         }
 
-        public static void main(String[] args) {
-            RunningKey k = new RunningKey(26);
-            k.combinations("abcd", 0, 4);
-        }
+//        public static void main(String[] args) {
+//            RunningKey k = new RunningKey(26);
+//            k.combinations("abcd", 0, 4);
+//        }
 
         public double score(String plain, String cipher, int offset, int length, double[] weights) {
             return singlescore(plain, offset, length, weights) * singlescore(cipher, offset, length, weights);
