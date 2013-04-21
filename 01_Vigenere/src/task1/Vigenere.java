@@ -14,6 +14,7 @@ package task1;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.StringTokenizer;
 
 import de.tubs.cs.iti.jcrypt.chiffre.Cipher;
 
@@ -25,7 +26,7 @@ import de.tubs.cs.iti.jcrypt.chiffre.Cipher;
  */
 public class Vigenere extends Cipher {
 	
-	private int[] keys = null;
+	private java.util.ArrayList<Integer> keys = new java.util.ArrayList<Integer>(0);
 
   /**
    * Analysiert den durch den Reader <code>ciphertext</code> gegebenen
@@ -90,7 +91,25 @@ public class Vigenere extends Cipher {
    * @see #writeKey writeKey
    */
   public void readKey(BufferedReader key) {
-
+	    try {
+	        StringTokenizer st = new StringTokenizer(key.readLine(), " ");
+	        modulus = Integer.parseInt(st.nextToken());
+	        System.out.println("Modulus: " + modulus);
+	        while (st.hasMoreElements()) {
+	        	this.keys.add(Integer.parseInt(st.nextToken()));
+	        }
+	        key.close();
+	      } catch (IOException e) {
+	        System.err.println("Abbruch: Fehler beim Lesen oder Schlie√üen der "
+	            + "Schlüsseldatei.");
+	        e.printStackTrace();
+	        System.exit(1);
+	      } catch (NumberFormatException e) {
+	        System.err.println("Abbruch: Fehler beim Parsen eines Wertes aus der "
+	            + "Schlüsseldatei.");
+	        e.printStackTrace();
+	        System.exit(1);
+	      }
   }
 
   /**
