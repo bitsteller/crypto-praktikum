@@ -11,11 +11,7 @@
 
 package task1;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.StringReader;
-import java.io.StringWriter;
+import java.io.*;
 
 import java.util.*;
 import de.tubs.cs.iti.jcrypt.chiffre.*;
@@ -66,6 +62,35 @@ public class Vigenere extends Cipher {
             } catch(IOException e) {
                 e.printStackTrace();
                 return;
+            }
+
+        }
+
+        public static void main(String[] args) throws IOException {
+            // read from input file, or stdin
+            BufferedReader input = args.length > 1 ? new BufferedReader(new FileReader(args[1])) : new BufferedReader(new InputStreamReader(System.in));
+            // use output file, if any, or stdout
+            BufferedWriter output = args.length > 2 ? new BufferedWriter(new FileWriter(args[2])) : new BufferedWriter(new PrintWriter(System.out));
+
+            Vigenere v = new Vigenere();
+            v.readKey(new BufferedReader(new StringReader("26 1 2 3\n")));
+            v.charMap = new CharacterMapping(v.modulus);
+
+            switch(args[0]) {
+                case "encipher":
+                    v.encipher(input, output);
+                    return;
+
+                case "decipher":
+                    v.decipher(input, output);
+                    return;
+
+                case "break":
+                    v.breakCipher(input, output);
+                    return;
+
+                default:
+                    System.out.println("Usage: $0 encipher|decipher|break [infile [outfile]]");
             }
 
         }
