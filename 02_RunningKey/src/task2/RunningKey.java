@@ -97,6 +97,8 @@ public class RunningKey extends Cipher {
 			while ((charClear = cleartext.read()) != -1) {
 				charClear = charMap.mapChar(charClear);
 				int charKey = charMap.mapChar(keystream.read());
+				while (charKey == -1)
+					charKey = charMap.mapChar(keystream.read());
 				if (charClear != -1) { //skip invald characters
 					int charCipher = (charClear + charKey) % modulus;
 					charCipher = charMap.remapChar(charCipher);
