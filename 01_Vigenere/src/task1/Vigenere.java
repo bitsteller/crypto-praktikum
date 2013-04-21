@@ -14,6 +14,8 @@ package task1;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
 
 import java.util.*;
 import de.tubs.cs.iti.jcrypt.chiffre.*;
@@ -54,11 +56,12 @@ public class Vigenere extends Cipher {
                 int d = (int) Math.round(approxPeriodLength(ciphertext));
             	Vector<Integer> possibleKey = new Vector<Integer>();
             	for (int i = 0; i < d; i++) {
-            		possibleKey.add(breakCeasar(ciphertext.substring(i),d));
+            		possibleKey.add(this.breakCaesar(ciphertext.substring(i),d)[0]);
             	}
             	this.keys = possibleKey;
-            	this.decipher(inbuf, cleartext);
-            	
+            	StringWriter sw = new StringWriter();
+            	this.decipher(new BufferedReader(new StringReader(ciphertext)), new BufferedWriter(sw));
+            	System.out.println(sw.getBuffer()); //Debug output
                 
             } catch(IOException e) {
                 e.printStackTrace();
@@ -135,7 +138,7 @@ public class Vigenere extends Cipher {
                     sum += freqs[i]*(freqs[i]-1);
             }
 
-            return sum / N*(N-1.0d);
+            return sum / (N*(N-1.0d));
         }
 
 	public double randomDistribution() {
