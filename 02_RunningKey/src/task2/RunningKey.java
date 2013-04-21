@@ -184,30 +184,60 @@ public class RunningKey extends Cipher {
 
 	}
 
-  HashSet<AbstractMap.SimpleEntry<Integer, Integer>>[] sumpieces;
-  private void generateSumPieces() {
-      sumpieces = (HashSet<AbstractMap.SimpleEntry<Integer, Integer>>[]) new HashSet[modulus];
-      for(int i = 0; i < modulus; i++)
-          sumpieces[i] = new HashSet<AbstractMap.SimpleEntry<Integer, Integer>>();
-      for(int i = 0; i < modulus; i++) {
-          for(int j = 0; j < modulus; j++) {
-              sumpieces[(i+j) % modulus].add(new AbstractMap.SimpleEntry<Integer, Integer>(i, j));
-          }
-      }
-  }
+        HashSet<AbstractMap.SimpleEntry<Integer, Integer>>[] sumpieces;
+        HashMap<String, Double> uniGrams, biGrams, triGrams;
 
-  public static void main_testpieces(String[] args) {
-      RunningKey k = new RunningKey();
-      k.modulus = 26;
-      k.generateSumPieces();
+        RunningKey(int modulus) {
+            charMap = new CharacterMapping(modulus);
+            generateSumPieces();
 
-      Iterator<AbstractMap.SimpleEntry<Integer, Integer>> it = k.sumpieces[17].iterator();
-      AbstractMap.SimpleEntry<Integer, Integer> x;
-      while(it.hasNext()) {
-          x = it.next();
-          System.out.println(x);
-      }
+            { // generate unigram hashmap
+                Iterator<NGram> it = FrequencyTables.getNGramsAsList(1, charMap).iterator();
+                while (it.hasNext()) {
+                    NGram n = it.next();
+                    uniGrams.put(n.getCharacters(), n.getFrequency());
+                }
+            }
+            { // generate digram hashmap
+                Iterator<NGram> it = FrequencyTables.getNGramsAsList(2, charMap).iterator();
+                while (it.hasNext()) {
+                    NGram n = it.next();
+                    biGrams.put(n.getCharacters(), n.getFrequency());
+                }
+            }
+            { // generate trigram hashmap
+                Iterator<NGram> it = FrequencyTables.getNGramsAsList(3, charMap).iterator();
+                while (it.hasNext()) {
+                    NGram n = it.next();
+                    triGrams.put(n.getCharacters(), n.getFrequency());
+                }
+            }
+        }
 
-  }
+
+        private void generateSumPieces() {
+            sumpieces = (HashSet<AbstractMap.SimpleEntry<Integer, Integer>>[]) new HashSet[modulus];
+            for(int i = 0; i < modulus; i++)
+                sumpieces[i] = new HashSet<AbstractMap.SimpleEntry<Integer, Integer>>();
+            for(int i = 0; i < modulus; i++) {
+                for(int j = 0; j < modulus; j++) {
+                    sumpieces[(i+j) % modulus].add(new AbstractMap.SimpleEntry<Integer, Integer>(i, j));
+                }
+            }
+        }
+
+        public static void main_testpieces(String[] args) {
+            RunningKey k = new RunningKey();
+            k.modulus = 26;
+            k.generateSumPieces();
+
+            Iterator<AbstractMap.SimpleEntry<Integer, Integer>> it = k.sumpieces[17].iterator();
+            AbstractMap.SimpleEntry<Integer, Integer> x;
+            while(it.hasNext()) {
+                x = it.next();
+                System.out.println(x);
+            }
+
+        }
 
 }
