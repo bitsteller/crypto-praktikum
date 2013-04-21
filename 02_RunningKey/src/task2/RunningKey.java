@@ -161,25 +161,23 @@ public class RunningKey extends Cipher {
 				System.out));
 
 		RunningKey v = new RunningKey(26);
-		// v.readKey(new BufferedReader(new StringReader("26 keystream.txt\n"))); // FIXME?
-		// v.charMap = new CharacterMapping(v.modulus);
+		v.keystreamFilename = "keystream.txt";
+		v.charMap = new CharacterMapping(v.modulus);
 
-		switch (args[0]) {
-		case "encipher":
+		if (args[0].equals("encipher")) {
 			v.encipher(input, output);
 			return;
-
-		case "decipher":
+		}
+		else if (args[0].equals("decipher")) {
 			v.decipher(input, output);
 			return;
-
-		case "break":
+		}
+		else if (args[0].equals("break")) {
 			v.breakCipher(input, output);
 			return;
-
-		default:
-			System.out
-					.println("Usage: $0 encipher|decipher|break [infile [outfile]]");
+		}
+		else {
+				System.out.println("Usage: $0 encipher|decipher|break [infile [outfile]]");
 		}
 
 	}
