@@ -186,6 +186,7 @@ public class RunningKey extends Cipher {
         HashMap<String, Double> uniGrams, biGrams, triGrams;
 
         RunningKey(int modulus) {
+        	this.modulus = modulus;
             charMap = new CharacterMapping(modulus);
             generateSumPieces();
 
