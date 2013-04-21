@@ -13,6 +13,7 @@ package task1;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.IOException;
 
 import de.tubs.cs.iti.jcrypt.chiffre.Cipher;
 
@@ -23,6 +24,8 @@ import de.tubs.cs.iti.jcrypt.chiffre.Cipher;
  * @version 1.0 - Tue Mar 30 15:53:38 CEST 2010
  */
 public class Vigenere extends Cipher {
+	
+	private int[] keys = null;
 
   /**
    * Analysiert den durch den Reader <code>ciphertext</code> gegebenen
@@ -99,6 +102,18 @@ public class Vigenere extends Cipher {
    * @see #readKey readKey
    */
   public void writeKey(BufferedWriter key) {
-
+	    try {
+	        key.write(modulus);
+	        for (int k: keys) {
+	        	key.write(" " + k);
+	        }
+	        key.newLine();
+	        key.close();
+	      } catch (IOException e) {
+	        System.out.println("Abbruch: Fehler beim Schreiben oder Schließen der "
+	            + "Schlüsseldatei.");
+	        e.printStackTrace();
+	        System.exit(1);
+	      }
   }
 }
