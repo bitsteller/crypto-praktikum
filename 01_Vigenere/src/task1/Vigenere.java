@@ -1,12 +1,12 @@
 /*
- * jCrypt - Programmierumgebung für das Kryptologie-Praktikum
- * Studienarbeit am Institut für Theoretische Informatik der
- * Technischen Universität Braunschweig
+ * jCrypt - Programmierumgebung fÃ¼r das Kryptologie-Praktikum
+ * Studienarbeit am Institut fÃ¼r Theoretische Informatik der
+ * Technischen UniversitÃ¤t Braunschweig
  * 
  * Datei:        Vigenere.java
- * Beschreibung: Dummy-Implementierung der Vigenère-Chiffre
- * Erstellt:     30. März 2010
- * Autor:        Martin Klußmann
+ * Beschreibung: Dummy-Implementierung der VigenÃ¨re-Chiffre
+ * Erstellt:     30. MÃ¤rz 2010
+ * Autor:        Martin KluÃmann
  */
 
 package task1;
@@ -19,19 +19,21 @@ import java.util.StringTokenizer;
 import de.tubs.cs.iti.jcrypt.chiffre.CharacterMapping;
 import de.tubs.cs.iti.jcrypt.chiffre.Cipher;
 
+import java.util.Vector;
+
 /**
- * Dummy-Klasse für die Vigenère-Chiffre.
+ * Dummy-Klasse fÃ¼r die VigenÃ¨re-Chiffre.
  *
- * @author Martin Klußmann
+ * @author Martin KluÃmann
  * @version 1.0 - Tue Mar 30 15:53:38 CEST 2010
  */
 public class Vigenere extends Cipher {
-	
-	private java.util.ArrayList<Integer> keys = new java.util.ArrayList<Integer>(0);
+
+  protected Vector<Integer> keys = new Vector<Integer>();
 
   /**
    * Analysiert den durch den Reader <code>ciphertext</code> gegebenen
-   * Chiffretext, bricht die Chiffre bzw. unterstützt das Brechen der Chiffre
+   * Chiffretext, bricht die Chiffre bzw. unterstÃ¼tzt das Brechen der Chiffre
    * (ggf. interaktiv) und schreibt den Klartext mit dem Writer
    * <code>cleartext</code>.
    *
@@ -45,7 +47,7 @@ public class Vigenere extends Cipher {
   }
 
   /**
-   * Entschlüsselt den durch den Reader <code>ciphertext</code> gegebenen
+   * EntschlÃ¼sselt den durch den Reader <code>ciphertext</code> gegebenen
    * Chiffretext und schreibt den Klartext mit dem Writer
    * <code>cleartext</code>.
    *
@@ -56,10 +58,34 @@ public class Vigenere extends Cipher {
    */
   public void decipher(BufferedReader ciphertext, BufferedWriter cleartext) {
 
+    try {
+      int character, ord = 0;
+      boolean characterSkipped = false;
+      while ((character = ciphertext.read()) != -1) {
+        character = charMap.mapChar(character);
+        if (character != -1) {
+          character = (character - keys.get(ord) + modulus) % modulus;
+          character = charMap.remapChar(character);
+          cleartext.write(character);
+          ord = (ord+1) % keys.size();
+        } else {
+          // doing nothing with this (for now)
+          characterSkipped = true;
+        }
+      }
+      cleartext.close();
+      ciphertext.close();
+    } catch (IOException e) {
+      System.err.println("Abbruch: Fehler beim Zugriff auf Klar- oder "
+          + "Chiffretextdatei.");
+      e.printStackTrace();
+      System.exit(1);
+    }
+
   }
 
   /**
-   * Verschlüsselt den durch den Reader <code>cleartext</code> gegebenen
+   * VerschlÃ¼sselt den durch den Reader <code>cleartext</code> gegebenen
    * Klartext und schreibt den Chiffretext mit dem Writer
    * <code>ciphertext</code>.
    * 
@@ -70,10 +96,34 @@ public class Vigenere extends Cipher {
    */
   public void encipher(BufferedReader cleartext, BufferedWriter ciphertext) {
 
+    try {
+      int character, ord = 0;
+      boolean characterSkipped = false;
+      while ((character = cleartext.read()) != -1) {
+        character = charMap.mapChar(character);
+        if (character != -1) {
+          character = (character + keys.get(ord)) % modulus;
+          character = charMap.remapChar(character);
+          ciphertext.write(character);
+          ord = (ord+1) % keys.size();
+        } else {
+          // doing nothing with this (for now)
+          characterSkipped = true;
+        }
+      }
+      cleartext.close();
+      ciphertext.close();
+    } catch (IOException e) {
+      System.err.println("Abbruch: Fehler beim Zugriff auf Klar- oder "
+          + "Chiffretextdatei.");
+      e.printStackTrace();
+      System.exit(1);
+    }
+
   }
 
   /**
-   * Erzeugt einen neuen Schlüssel.
+   * Erzeugt einen neuen SchlÃ¼ssel.
    * 
    * @see #readKey readKey
    * @see #writeKey writeKey
@@ -157,10 +207,10 @@ public class Vigenere extends Cipher {
   }
 
   /**
-   * Liest den Schlüssel mit dem Reader <code>key</code>.
+   * Liest den SchlÃ¼ssel mit dem Reader <code>key</code>.
    * 
    * @param key
-   * Der Reader, der aus der Schlüsseldatei liest.
+   * Der Reader, der aus der SchlÃ¼sseldatei liest.
    * @see #makeKey makeKey
    * @see #writeKey writeKey
    */
@@ -174,23 +224,23 @@ public class Vigenere extends Cipher {
 	        }
 	        key.close();
 	      } catch (IOException e) {
-	        System.err.println("Abbruch: Fehler beim Lesen oder Schließen der "
-	            + "Schl�sseldatei.");
+	        System.err.println("Abbruch: Fehler beim Lesen oder SchlieÃen der "
+	            + "Schlsseldatei.");
 	        e.printStackTrace();
 	        System.exit(1);
 	      } catch (NumberFormatException e) {
 	        System.err.println("Abbruch: Fehler beim Parsen eines Wertes aus der "
-	            + "Schl�sseldatei.");
+	            + "Schlsseldatei.");
 	        e.printStackTrace();
 	        System.exit(1);
 	      }
   }
 
   /**
-   * Schreibt den Schlüssel mit dem Writer <code>key</code>.
+   * Schreibt den SchlÃ¼ssel mit dem Writer <code>key</code>.
    * 
    * @param key
-   * Der Writer, der in die Schlüsseldatei schreibt.
+   * Der Writer, der in die SchlÃ¼sseldatei schreibt.
    * @see #makeKey makeKey
    * @see #readKey readKey
    */
@@ -203,8 +253,8 @@ public class Vigenere extends Cipher {
 	        key.newLine();
 	        key.close();
 	      } catch (IOException e) {
-	        System.out.println("Abbruch: Fehler beim Schreiben oder Schließen der "
-	            + "Schlüsseldatei.");
+	        System.out.println("Abbruch: Fehler beim Schreiben oder SchlieÃen der "
+	            + "SchlÃ¼sseldatei.");
 	        e.printStackTrace();
 	        System.exit(1);
 	      }
