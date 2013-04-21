@@ -11,18 +11,10 @@
 
 package task2;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.io.StringReader;
+import java.io.*;
+import java.util.*;
 
-import de.tubs.cs.iti.jcrypt.chiffre.CharacterMapping;
-import de.tubs.cs.iti.jcrypt.chiffre.Cipher;
+import de.tubs.cs.iti.jcrypt.chiffre.*;
 
 /**
  * Dummy-Klasse für die Chiffre mit laufendem Schlüssel.
@@ -191,4 +183,31 @@ public class RunningKey extends Cipher {
 		}
 
 	}
+
+  HashSet<AbstractMap.SimpleEntry<Integer, Integer>>[] sumpieces;
+  private void generateSumPieces() {
+      sumpieces = (HashSet<AbstractMap.SimpleEntry<Integer, Integer>>[]) new HashSet[modulus];
+      for(int i = 0; i < modulus; i++)
+          sumpieces[i] = new HashSet<AbstractMap.SimpleEntry<Integer, Integer>>();
+      for(int i = 0; i < modulus; i++) {
+          for(int j = 0; j < modulus; j++) {
+              sumpieces[(i+j) % modulus].add(new AbstractMap.SimpleEntry<Integer, Integer>(i, j));
+          }
+      }
+  }
+
+  public static void main_testpieces(String[] args) {
+      RunningKey k = new RunningKey();
+      k.modulus = 26;
+      k.generateSumPieces();
+
+      Iterator<AbstractMap.SimpleEntry<Integer, Integer>> it = k.sumpieces[17].iterator();
+      AbstractMap.SimpleEntry<Integer, Integer> x;
+      while(it.hasNext()) {
+          x = it.next();
+          System.out.println(x);
+      }
+
+  }
+
 }
