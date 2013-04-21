@@ -45,6 +45,33 @@ public class Vigenere extends Cipher {
 
 	}
 
+        /**
+         * Friedmann test
+         *
+         * http://en.wikipedia.org/wiki/Vigen%C3%A8re_cipher#Friedman_test
+         */
+        public double friedmann(BufferedReader ciphertext) throws IOException {
+
+            int[] freqs = new int[modulus];
+            double total = 0;
+            { // find all character frequencies
+                int character;
+                while ((character = ciphertext.read()) != -1) {
+                    character = charMap.mapChar(character);
+                    freqs[character] += 1;
+                    total += 1;
+                }
+            }
+
+            int sum = 0;
+            { // sum up frequencies
+                for(int i = 0; i < freqs.length; i++)
+                    sum += freqs[i]*(freqs[i]-1);
+            }
+
+            return sum / total*(total-1);
+        }
+
 	/**
 	 * Entschlüsselt den durch den Reader <code>ciphertext</code> gegebenen
 	 * Chiffretext und schreibt den Klartext mit dem Writer
