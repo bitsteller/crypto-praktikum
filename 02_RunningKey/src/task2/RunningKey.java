@@ -76,8 +76,11 @@ public class RunningKey extends Cipher {
 			while (true) {
 				String cipherSubstring = ciphertext.substring(start, start + len); 
 				System.out.println(cipherSubstring);
-				
-				
+				ScoredThingie[] results = this.topN(cipherSubstring, 5, weights);
+				System.out.println(results[keyIndex].ctext);
+				System.out.println(results[keyIndex].ptext);
+				System.out.println("Score: " + results[keyIndex].score);
+
 				switch (in.readLine().charAt(0)) {
 				case 'q':
 					return;
