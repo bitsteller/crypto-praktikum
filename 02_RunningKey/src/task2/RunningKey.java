@@ -193,6 +193,7 @@ public class RunningKey extends Cipher {
                 Iterator<NGram> it = FrequencyTables.getNGramsAsList(1, charMap).iterator();
                 while (it.hasNext()) {
                     NGram n = it.next();
+                    uniGrams = new HashMap<String, Double>();
                     uniGrams.put(n.getCharacters(), n.getFrequency());
                 }
             }
@@ -200,6 +201,7 @@ public class RunningKey extends Cipher {
                 Iterator<NGram> it = FrequencyTables.getNGramsAsList(2, charMap).iterator();
                 while (it.hasNext()) {
                     NGram n = it.next();
+                    biGrams = new HashMap<String, Double>();
                     biGrams.put(n.getCharacters(), n.getFrequency());
                 }
             }
@@ -207,6 +209,7 @@ public class RunningKey extends Cipher {
                 Iterator<NGram> it = FrequencyTables.getNGramsAsList(3, charMap).iterator();
                 while (it.hasNext()) {
                     NGram n = it.next();
+                    triGrams = new HashMap<String, Double>();
                     triGrams.put(n.getCharacters(), n.getFrequency());
                 }
             }
