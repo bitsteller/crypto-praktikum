@@ -315,29 +315,75 @@ public class RunningKey extends Cipher {
             return new Combinator<AbstractMap.SimpleEntry<Integer, Integer>>(possible_pieces);
         }
 
-        static class ScoredThingie {
+        static class ScoredThingie implements Comparable<ScoredThingie> {
             String ctext, ptext;
             double score;
+
+            ScoredThingie(double score, String ctext, String ptext) {
+                this.score = score;
+                this.ctext = ctext;
+                this.ptext = ptext;
+            }
+
+            public int compareTo(ScoredThingie other) {
+                return score < other.score ? -1 : 1;
+            }
+
+            public String toString() {
+                return score + " / " + ctext + " / " + ptext;
+            }
         }
 
-        public ScoredThingie[] topN(String inp, int n, double[] weights) {
-            ScoredThingie[] ret = new ScoredThingie[n];
+        public PriorityQueue<ScoredThingie> topN(String inp, int n, double[] weights) {
+            PriorityQueue<ScoredThingie> ret = new PriorityQueue<ScoredThingie>();
+
+            Iterator<List<AbstractMap.SimpleEntry<Integer, Integer>>> it = combinations(inp, 0, inp.length());
+            char[] a = new char[inp.length()], b = new char[inp.length()];
+            int c1 = 0, c2 = 0;
+            int i = 0;
+            while(it.hasNext()) {
+                entryToArrays(it.next(), a, b);
+                // rough scoring
+                double score = score(a, b, weights);
+                // System.out.println(new ScoredThingie(score, new String(a), new String(b)));
+                if(ret.isEmpty() || score > ret.peek().score) {
+                    if(ret.size() >= n)
+                        ret.poll();
+                    ret.add(new ScoredThingie(score, new String(a), new String(b)));
+                }
+            }
+
             return ret;
         }
 
-        public double score(String plain, String cipher, int offset, int length, double[] weights) {
-            return singlescore(plain, offset, length, weights) * singlescore(cipher, offset, length, weights);
+        public static void main_topN(String[] args) {
+            RunningKey k = new RunningKey(26);
+
+            PriorityQueue<ScoredThingie> q = k.topN("john", 50, new double[] { 1.0d, 3.0d, 8.0d });
+            while(!q.isEmpty())
+                System.out.println(q.poll());
+        }
+
+        public void entryToArrays(List<AbstractMap.SimpleEntry<Integer, Integer>> in, char[] a, char[] b) {
+            for(int i = 0; i < in.size(); i++) {
+                a[i] = (char) charMap.remapChar(in.get(i).getKey());
+                b[i] = (char) charMap.remapChar(in.get(i).getValue());
+            }
+        }
+
+        public double score(char[] plain, char[] cipher, double[] weights) {
+            return singlescore(plain, weights) * singlescore(cipher, weights);
         }
 
 
-        public double singlescore(String snippet, int offset, int length, double[] weights) {
+        public double singlescore(char[] snippet, double[] weights) {
 
             double score = 0.0d;
 
             for(int d = 0; d < nGrams.length; d++) {
                 double sub = 0.0d;
-                for(int i = 0; i < length-(d+1); i++) {
-                    Double k = nGrams[d].get(snippet.substring(offset+i, offset+i+d+1));
+                for(int i = 0; i < snippet.length -d; i++) {
+                    Double k = nGrams[d].get(new String(snippet, i, d+1));
                     if(k != null)
                         sub += k;
                 }
@@ -352,7 +398,7 @@ public class RunningKey extends Cipher {
         HashMap<String, Double>[] nGrams;
 
         RunningKey(int modulus) {
-        	this.modulus = modulus;
+            this.modulus = modulus;
             charMap = new CharacterMapping(modulus);
             generateSumPieces();
 
@@ -366,7 +412,6 @@ public class RunningKey extends Cipher {
                 }
             }
         }
-
 
         private void generateSumPieces() {
             sumpieces = (HashSet<AbstractMap.SimpleEntry<Integer, Integer>>[]) new HashSet[modulus];
