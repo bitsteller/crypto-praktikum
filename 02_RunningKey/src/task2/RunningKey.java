@@ -183,35 +183,20 @@ public class RunningKey extends Cipher {
 	}
 
         HashSet<AbstractMap.SimpleEntry<Integer, Integer>>[] sumpieces;
-        HashMap<String, Double> uniGrams, biGrams, triGrams;
+        HashMap<String, Double>[] nGrams;
 
         RunningKey(int modulus) {
         	this.modulus = modulus;
             charMap = new CharacterMapping(modulus);
             generateSumPieces();
 
-            { // generate unigram hashmap
-                Iterator<NGram> it = FrequencyTables.getNGramsAsList(1, charMap).iterator();
+            nGrams = (HashMap<String, Double>[]) new HashMap[3];
+            for(int d = 0; d < 3; d++) {
+                Iterator<NGram> it = FrequencyTables.getNGramsAsList(d+1, charMap).iterator();
+                nGrams[d] = new HashMap<String, Double>();
                 while (it.hasNext()) {
                     NGram n = it.next();
-                    uniGrams = new HashMap<String, Double>();
-                    uniGrams.put(n.getCharacters(), n.getFrequency());
-                }
-            }
-            { // generate digram hashmap
-                Iterator<NGram> it = FrequencyTables.getNGramsAsList(2, charMap).iterator();
-                while (it.hasNext()) {
-                    NGram n = it.next();
-                    biGrams = new HashMap<String, Double>();
-                    biGrams.put(n.getCharacters(), n.getFrequency());
-                }
-            }
-            { // generate trigram hashmap
-                Iterator<NGram> it = FrequencyTables.getNGramsAsList(3, charMap).iterator();
-                while (it.hasNext()) {
-                    NGram n = it.next();
-                    triGrams = new HashMap<String, Double>();
-                    triGrams.put(n.getCharacters(), n.getFrequency());
+                    nGrams[d].put(n.getCharacters(), n.getFrequency());
                 }
             }
         }
