@@ -53,7 +53,7 @@ public class RunningKey extends Cipher {
 
 			double[] weights = new double[3];
 			int start = 0;
-			int key = 0;
+			int keyIndex = 0;
 			int len = 4;
 
 			System.out
@@ -77,6 +77,8 @@ public class RunningKey extends Cipher {
 			while (true) {
 				String cipherSubstring = ciphertext.substring(start, start + len); 
 				System.out.println(cipherSubstring);
+				
+				
 				switch (in.readLine().charAt(0)) {
 				case 'q':
 					return;
@@ -108,9 +110,9 @@ public class RunningKey extends Cipher {
 				case 'k':
 					System.out.println("new key (0..4), where 0 is the key with the highest probability:");
 					try {
-						key = Integer.parseInt(in.readLine());
-						if (key < 0 | key > 4) {
-							key = 0;
+						keyIndex = Integer.parseInt(in.readLine());
+						if (keyIndex < 0 | keyIndex > 4) {
+							keyIndex = 0;
 							System.out.println("Error: key has to between 0 and 4");
 						}
 					} catch (NumberFormatException e1) {
