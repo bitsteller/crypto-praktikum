@@ -73,10 +73,15 @@ public class RunningKey extends Cipher {
 				e1.printStackTrace();
 			}
 
+			String lastCipher = "";
+			ScoredThingie[] results = new ScoredThingie[5];
 			while (true) {
 				String cipherSubstring = ciphertext.substring(start, start + len); 
 				System.out.println(cipherSubstring);
-				ScoredThingie[] results = this.topN(cipherSubstring, 5, weights);
+				if (!cipherSubstring.equals(lastCipher)) {
+					this.topN(cipherSubstring, 5, weights).toArray(results);
+					lastCipher = cipherSubstring;
+				}
 				System.out.println(results[keyIndex].ctext);
 				System.out.println(results[keyIndex].ptext);
 				System.out.println("Score: " + results[keyIndex].score);
@@ -109,6 +114,7 @@ public class RunningKey extends Cipher {
 						len = 4;
 						e1.printStackTrace();
 					}
+					break;
 				case 'k':
 					System.out.println("new key (0..4), where 0 is the key with the highest probability:");
 					try {
@@ -121,6 +127,7 @@ public class RunningKey extends Cipher {
 						len = 4;
 						e1.printStackTrace();
 					}
+					break;
 				}
 			}
 		} catch (IOException e) {
