@@ -182,6 +182,24 @@ public class RunningKey extends Cipher {
 
 	}
 
+        public double score(String snippet, int offset, int length, double[] weights) {
+
+            double score = 0.0d;
+
+            for(int d = 0; d < nGrams.length; d++) {
+                double sub = 0.0d;
+                for(int i = 0; i < length-(d+1); i++) {
+                    Double k = nGrams[d].get(snippet.substring(i, i+d+1));
+                    if(k != null)
+                        sub += k;
+                }
+
+                score += sub * weights[d];
+            }
+
+            return score;
+        }
+
         HashSet<AbstractMap.SimpleEntry<Integer, Integer>>[] sumpieces;
         HashMap<String, Double>[] nGrams;
 
