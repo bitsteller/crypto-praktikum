@@ -14,12 +14,9 @@ package task1;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.util.StringTokenizer;
-import java.util.Vector;
 
-import de.tubs.cs.iti.jcrypt.chiffre.CharacterMapping;
-import de.tubs.cs.iti.jcrypt.chiffre.Cipher;
-import de.tubs.cs.iti.jcrypt.chiffre.FrequencyTables;
+import java.util.*;
+import de.tubs.cs.iti.jcrypt.chiffre.*;
 
 /**
  * Dummy-Klasse für die Vigenère-Chiffre.
@@ -42,27 +39,61 @@ public class Vigenere extends Cipher {
 	 * @param cleartext
 	 *            Der Writer, der den Klartext schreiben soll.
 	 */
-	public void breakCipher(BufferedReader ciphertext, BufferedWriter cleartext) {
+	public void breakCipher(BufferedReader inbuf, BufferedWriter cleartext) {
 
-	}
+            try {
+                String ciphertext;
+                { // read ciphertext into a string
+                    String tmp;
+                    StringBuilder tmp2 = new StringBuilder();
+                    while( (tmp = inbuf.readLine()) != null) {
+                        tmp2.append(tmp);
+                    }
+                    ciphertext = tmp2.toString();
+                }
+            } catch(IOException e) {
+                e.printStackTrace();
+                return;
+            }
 
-	/**
-	 * Friedmann test
-	 * 
-	 * http://en.wikipedia.org/wiki/Vigen%C3%A8re_cipher#Friedman_test
-	 */
-	public double friedmann(BufferedReader ciphertext) throws IOException {
+        }
 
-		int[] freqs = new int[modulus];
-		double total = 0;
-		{ // find all character frequencies
-			int character;
-			while ((character = ciphertext.read()) != -1) {
-				character = charMap.mapChar(character);
-				freqs[character] += 1;
-				total += 1;
-			}
-		}
+        /**
+         * Approximate period length of an input text
+         */
+        public double approxPeriodLength(String ciphertext) throws IOException {
+
+            double randDist = randomDistribution();
+            double IC = friedmann(ciphertext);
+            int N = ciphertext.length();
+
+            return ( (randDist - 1.0/modulus) * N ) / ( (N-1)*IC - (1.0/modulus*N) + randDist);
+
+        }
+
+        /**
+         * Friedmann test
+         *
+         * http://en.wikipedia.org/wiki/Vigen%C3%A8re_cipher#Friedman_test
+         */
+        public double friedmann(String ciphertext) {
+
+            int[] freqs = new int[modulus];
+            double N = ciphertext.length();
+            { // find all character frequencies
+                for (int i = 0; i < ciphertext.length(); i++) {
+                    freqs[charMap.mapChar(ciphertext.charAt(i))] += 1;
+                }
+            }
+
+            int sum = 0;
+            { // sum up frequencies
+                for(int i = 0; i < freqs.length; i++)
+                    sum += freqs[i]*(freqs[i]-1);
+            }
+
+            return sum / N*(N-1.0d);
+        }
 
 		int sum = 0;
 		{ // sum up frequencies
