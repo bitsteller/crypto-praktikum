@@ -54,6 +54,7 @@ public class RunningKey extends Cipher {
 			double[] weights = new double[3];
 			int start = 0;
 			int key = 0;
+			int len = 4;
 
 			System.out
 					.println("Please enter your space sperated weights g1 g2 g3:");
@@ -74,7 +75,7 @@ public class RunningKey extends Cipher {
 			}
 
 			while (true) {
-				String cipherSubstring = ciphertext.substring(start, start+4); //TODO remove hardcoded length
+				String cipherSubstring = ciphertext.substring(start, start + len); 
 				System.out.println(cipherSubstring);
 				switch (in.readLine().charAt(0)) {
 				case 'q':
@@ -84,6 +85,7 @@ public class RunningKey extends Cipher {
 					try {
 						start = Integer.parseInt(in.readLine());
 						if (start >= ciphertext.length() | start < 0) {
+							start = 0;
 							System.out.println("Error: position has to be smaller than text length and bigger than 0");
 						}
 					} catch (NumberFormatException e1) {
@@ -91,6 +93,18 @@ public class RunningKey extends Cipher {
 						e1.printStackTrace();
 					}
 					break;
+				case 'l':
+					System.out.println("new length:");
+					try {
+						len = Integer.parseInt(in.readLine());
+						if (len <= 0) {
+							len = 4;
+							System.out.println("Error: length has to be bigger than 0 (and even bigger to make sense as well)");
+						}
+					} catch (NumberFormatException e1) {
+						len = 4;
+						e1.printStackTrace();
+					}
 				}
 			}
 		} catch (IOException e) {
