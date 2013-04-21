@@ -64,6 +64,7 @@ public class Vigenere extends Cipher {
 
                 while(true) {
 
+                    System.out.println("period: " + d);
                     System.out.println();
                     for (int i = 0; i < d; i++) {
                         if(cursor == i)
@@ -134,6 +135,29 @@ public class Vigenere extends Cipher {
                             if(current[cursor] < 0)
                                 current[cursor] = 0;
                             break;
+                        case 'x':
+                            d -= 1;
+                            if(d < 1)
+                                d = 1;
+                            // dirty
+                            current = new int[d];
+                            candidates = new int[d][modulus];
+                            for (int i = 0; i < d; i++)
+                                candidates[i] = breakCaesar(ciphertext.substring(i), d);
+
+                            break;
+                        case 'c':
+                            d += 1;
+                            if(d >= modulus)
+                                d = modulus-1;
+                            // dirty
+                            current = new int[d];
+                            candidates = new int[d][modulus];
+                            for (int i = 0; i < d; i++)
+                                candidates[i] = breakCaesar(ciphertext.substring(i), d);
+
+                            break;
+
                     }
 
                 }
