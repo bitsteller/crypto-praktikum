@@ -59,9 +59,11 @@ public class RunningKey extends Cipher {
 			int charCipher;
 			while ((charCipher = ciphertext.read()) != -1) {
 				charCipher = charMap.mapChar(charCipher);
-				int charKey = charMap.mapChar(keystream.read());
 				if (charCipher != -1) { //skip invald characters
-					int charClear = (charCipher - charKey) % modulus;
+					int charKey = charMap.mapChar(keystream.read());
+					while (charKey == -1)
+						charKey = charMap.mapChar(keystream.read());
+					int charClear = (modulus + charCipher - charKey) % modulus;
 					charClear = charMap.remapChar(charClear);
 					cleartext.write(charClear);
 				}
@@ -96,11 +98,11 @@ public class RunningKey extends Cipher {
 			int charClear;
 			while ((charClear = cleartext.read()) != -1) {
 				charClear = charMap.mapChar(charClear);
-				int charKey = charMap.mapChar(keystream.read());
-				while (charKey == -1)
-					charKey = charMap.mapChar(keystream.read());
 				if (charClear != -1) { //skip invald characters
-					int charCipher = (charClear + charKey) % modulus;
+					int charKey = charMap.mapChar(keystream.read());
+					while (charKey == -1)
+						charKey = charMap.mapChar(keystream.read());
+					int charCipher = (modulus + charClear + charKey) % modulus;
 					charCipher = charMap.remapChar(charCipher);
 					ciphertext.write(charCipher);
 				}
