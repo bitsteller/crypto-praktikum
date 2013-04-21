@@ -49,15 +49,95 @@ public class Vigenere extends Cipher {
                     }
                     ciphertext = tmp2.toString();
                 }
+                // expected period
                 int d = (int) Math.round(approxPeriodLength(ciphertext));
-            	Vector<Integer> possibleKey = new Vector<Integer>();
-            	for (int i = 0; i < d; i++) {
-            		possibleKey.add(this.breakCaesar(ciphertext.substring(i),d)[0]);
-            	}
-            	this.keys = possibleKey;
-            	StringWriter sw = new StringWriter();
-            	this.decipher(new BufferedReader(new StringReader(ciphertext)), new BufferedWriter(sw));
-            	System.out.println(sw.getBuffer()); //Debug output
+                // keys
+                int[][] candidates = new int[d][modulus];
+                for (int i = 0; i < d; i++)
+                    candidates[i] = breakCaesar(ciphertext.substring(i), d);
+
+                int[] current = new int[d];
+                int cursor = 0;
+                Arrays.fill(current, 0);
+
+                BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+
+                while(true) {
+
+                    System.out.println();
+                    for (int i = 0; i < d; i++) {
+                        if(cursor == i)
+                            System.out.print("[" + current[i] + "]");
+                        else
+                            System.out.print(current[i]);
+                    }
+                    System.out.println();
+
+                    for (int i = 0; i < d; i++) {
+                        if(cursor == i)
+                            System.out.print("[" + candidates[i][current[i]] + "]");
+                        else
+                            System.out.print(candidates[i][current[i]]);
+                    }
+                    System.out.println();
+
+                    for (int i = 0; i < d; i++) {
+                        if(cursor == i)
+                            System.out.print("[" + (char) charMap.remapChar(candidates[i][current[i]]) + "]");
+                        else
+                            System.out.print((char) charMap.remapChar(candidates[i][current[i]]));
+                    }
+                    System.out.println();
+
+                    switch(in.readLine().charAt(0)) {
+                        case 'q':
+                            return;
+                        case 'h':
+                            System.out.println("q: quit\nh: help\no:output\nwasd: move cursor");
+                            break;
+                        case 'p':
+                            for (int i = 0; i < d; i++) {
+                                System.out.print(i + ": ");
+                                for(int j = 0; j < modulus; j++)
+                                    System.out.print((char) charMap.remapChar(candidates[i][j]));
+                                System.out.println();
+                            }
+                            break;
+                        case 'o':
+                            Vector<Integer> possibleKey = new Vector<Integer>();
+                            for(int i = 0; i < d; i++) {
+                                possibleKey.add(candidates[i][current[i]]);
+                            }
+                            this.keys = possibleKey;
+                            StringWriter sw = new StringWriter();
+                            this.decipher(new BufferedReader(new StringReader(ciphertext)), new BufferedWriter(sw));
+                            System.out.println(sw.getBuffer()); //Debug output
+                            break;
+
+                        case 'a':
+                            cursor -= 1;
+                            if(cursor < 0)
+                                cursor = 0;
+                            break;
+                        case 'd':
+                            cursor += 1;
+                            if(cursor >= d)
+                                cursor = d-1;
+                            break;
+                        case 'w':
+                            current[cursor] += 1;
+                            if(current[cursor] >= modulus)
+                                current[cursor] = modulus-1;
+                            break;
+                        case 's':
+                            current[cursor] -= 1;
+                            if(current[cursor] < 0)
+                                current[cursor] = 0;
+                            break;
+                    }
+
+                }
+
                 
             } catch(IOException e) {
                 e.printStackTrace();
