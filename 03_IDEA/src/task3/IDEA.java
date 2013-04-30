@@ -17,6 +17,8 @@ import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 
+import java.math.BigInteger;
+
 import de.tubs.cs.iti.jcrypt.chiffre.BlockCipher;
 
 /**
@@ -26,6 +28,9 @@ import de.tubs.cs.iti.jcrypt.chiffre.BlockCipher;
  * @version 1.1 - Sat Apr 03 21:57:35 CEST 2010
  */
 public final class IDEA extends BlockCipher {
+
+    /// a bigint with first 128 bits set, needed for some bitwise trickery in idea_subkeys
+    protected final static BigInteger _128bits = BigInteger.valueOf(0L).setBit(128).subtract(BigInteger.ONE);
 
     /** generate subkeys.
      *
@@ -37,19 +42,24 @@ public final class IDEA extends BlockCipher {
      * @return an array of 52 sequential subkeys
      *
      */
-    public static char[] idea_subkeys(char[] key) {
-        assert(key.length == 16);
-        char[] ret = new char[104];
+    public static short[] idea_subkeys(BigInteger key) {
+        // there should be no bits set after the 128th! this is basically key.length == 16
+        assert(key.and(_128bits).equals(key));
 
-        // basic idea: put key in a biginteger, rotate as needed, put snapshots
-        // into ret.
-
+        short[] ret = new short[52];
         return ret;
     }
 
-    public static void idea_block(char[] in, char[] out, char[] key) {
+    /** One block of IDEA, consisting of 8.5 rounds of IDEA.
+     *
+     * @param in 64 bits of input to encrypt. may be altered!
+     * @param out 64 bits of output
+     * @param key 128 bit key
+     *
+     */
+    public static void idea_block(char[] in, char[] out, short[] key) {
         assert(in.length == 8 && out.length == 8);
-        assert(key.length == 16);
+        assert(key.length == 8);
         // 1. get subkeys
         // 2. 8 idea rounds
         // 3. 1 idea half-round
@@ -60,9 +70,9 @@ public final class IDEA extends BlockCipher {
      * @param out 64 bits of output
      * @param key 96 bit key
      */
-    public static void idea_round(char[] in, char[] out, char[] key, int key_offset) { 
+    public static void idea_round(char[] in, char[] out, short[] key, int key_offset) {
         assert(in.length == 8 && out.length == 8);
-        assert(key.length >= key_offset +12);
+        assert(key.length >= key_offset +6);
     }
 
     /** One half-round of IDEA.
@@ -70,9 +80,9 @@ public final class IDEA extends BlockCipher {
      * @param out 64 bits of output
      * @param key 64 bit key
      */
-    public static void idea_halfround(char[] in, char[] out, char[] key, int key_offset) { 
+    public static void idea_halfround(char[] in, char[] out, short[] key, int key_offset) { 
         assert(in.length == 8 && out.length == 8);
-        assert(key.length >= key_offset +8);
+        assert(key.length >= key_offset +4);
     }
 
     /**
