@@ -98,9 +98,15 @@ public final class IDEA extends BlockCipher {
         assert(in.length == 4 && out.length == 4);
         assert(subkeys.length == 52);
 
-        // 1. get subkeys
-        // 2. 8 idea rounds
-        // 3. 1 idea half-round
+        // 8 idea rounds
+        for(int i = 0; i < 8; i++) {
+            idea_round(in, out, subkeys, i*6);
+            System.arraycopy(out, 0, in, 0, 4);
+        }
+
+        // 1 idea half-round
+        idea_halfround(in, out, subkeys, 48);
+
     }
 
     /** One round of IDEA.
