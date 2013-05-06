@@ -102,9 +102,11 @@ public final class IDEA extends BlockCipher {
         assert(subkeys.length == 52);
 
         // 8 idea rounds
-        for(int i = 0; i < 8; i++) {
-            idea_round(in, out, subkeys, i*6);
-            System.arraycopy(out, 0, in, 0, 4);
+        for(int i = 0; i < 8; i+=2) {
+            // swap around in/out. note that the "in" array is used for temp
+            // values and thus destroyed in the processs.
+            idea_round(in, out, subkeys, (i+0)*6);
+            idea_round(out, in, subkeys, (i+1)*6);
         }
 
         // 1 idea half-round
