@@ -19,7 +19,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import java.math.BigInteger;
-import java.nio.ByteBuffer;
+import java.nio.*;
 import java.util.Random;
 
 import de.tubs.cs.iti.jcrypt.chiffre.BlockCipher;
@@ -35,7 +35,7 @@ public final class IDEA extends BlockCipher {
     /// a bigint with first 128 bits set, needed for some bitwise trickery in idea_subkeys
     protected final static BigInteger _128bits = BigInteger.valueOf(0L).setBit(128).subtract(BigInteger.ONE);
 
-    short[] keys_enc, keys_dec;
+    int[] keys_enc, keys_dec;
 
     /** generate subkeys.
      *
@@ -48,33 +48,29 @@ public final class IDEA extends BlockCipher {
      * @return an array of 52 sequential subkeys
      *
      */
-    public static short[] idea_subkeys(BigInteger key) {
+    public static int[] idea_subkeys(BigInteger key) {
         // there should be no bits set after the 128th! this is basically key.length == 16
         assert(key.and(_128bits).equals(key));
 
         // allocate buffer space
-        ByteBuffer buf = ByteBuffer.allocate(104);
+        int[] ret = new int[52];
 
         // BigInteger trickery: set 128th bit to make sure we get exactly 9
         // bytes, then skip the first one
         key = key.and(_128bits).setBit(128);
-        buf.put(key.toByteArray(), 1, 16);
+        byte[] buf = key.toByteArray();
+        for(int j = 0; j < 16; j+=2)
+            ret[j] = buf[j] | (buf[j+1] << 8);
+
         // 4 keys + 6*8 keys = 52 keys
         for(int i = 0; i < 6; i++) {
             // shift left by 25 bits in 128-bit rotation, and filter first 128 bits only
             key = key.shiftRight(103).or(key.shiftLeft(25)).and(_128bits).setBit(128);
             assert(key.toByteArray().length == 17 && key.toByteArray()[0] == 0x01);
             // put 16 bytes, or 8 for the last round
-            buf.put(key.toByteArray(), 1, i < 5 ? 16 : 8);
+            for(int j = 0, end = i < 5 ? 16 : 8; j < end; j+=2)
+                ret[i*6+j] = buf[j+1] | (buf[j+2] << 8);
         }
-
-        // there should be no bytes left for writing!
-        assert(buf.remaining() == 0);
-
-        // ok, get back to beginning, and write first 104 bytes into an array of 52 shorts
-        short[] ret = new short[52];
-        buf.flip();
-        buf.asShortBuffer().get(ret, 0, 52);
 
         return ret;
     }
@@ -87,13 +83,13 @@ public final class IDEA extends BlockCipher {
      * @return an array of 52 sequential decryption subkeys
      *
      */
-    public static short[] idea_deckeys(short[] keys_enc) {
+    public static int[] idea_deckeys(int[] keys_enc) {
 
         BigInteger addMod = BigInteger.valueOf(65536L);
         BigInteger multMod = BigInteger.valueOf(65537L);
 
         // allocate buffer space
-        ByteBuffer buf = ByteBuffer.allocate(104);
+        IntBuffer buf = IntBuffer.allocate(52);
 
         /*
             The first four subkeys for decryption are:
@@ -103,10 +99,10 @@ public final class IDEA extends BlockCipher {
             KD(3) =  -K(51)
             KD(4) = 1/K(52)
         */
-        buf.put(BigInteger.valueOf(keys_enc[48]).modInverse(multMod).toByteArray(), 0, 2);
-        buf.put(BigInteger.valueOf(keys_enc[49]).negate().toByteArray(), 0, 2);
-        buf.put(BigInteger.valueOf(keys_enc[50]).negate().toByteArray(), 0, 2);
-        buf.put(BigInteger.valueOf(keys_enc[51]).modInverse(multMod).toByteArray(), 0, 2);
+        buf.put(BigInteger.valueOf(keys_enc[48]).modInverse(multMod).intValue());
+        buf.put(-keys_enc[49]);
+        buf.put(-keys_enc[50]);
+        buf.put(BigInteger.valueOf(keys_enc[51]).modInverse(multMod).intValue());
 
         /*
             The following is repeated eight times, adding 6 to every decryption key's index and subtracting 6 from every encryption key's index:
@@ -117,8 +113,8 @@ public final class IDEA extends BlockCipher {
                 KD(5)  =   K(47)
                 KD(6)  =   K(48)
             */
-            buf.putShort(keys_enc[46 -i]);
-            buf.putShort(keys_enc[47 -i]);
+            buf.put(keys_enc[46 -i]);
+            buf.put(keys_enc[47 -i]);
 
             /*
                 KD(7)  = 1/K(43)
@@ -126,21 +122,20 @@ public final class IDEA extends BlockCipher {
                 KD(9)  =  -K(44)
                 KD(10) = 1/K(46)
             */
-
-            buf.put(BigInteger.valueOf(keys_enc[42 -i]).modInverse(multMod).toByteArray(), 0, 2);
-            buf.put(BigInteger.valueOf(keys_enc[44 -i]).negate().toByteArray(), 0, 2);
-            buf.put(BigInteger.valueOf(keys_enc[43 -i]).negate().toByteArray(), 0, 2);
-            buf.put(BigInteger.valueOf(keys_enc[47 -i]).modInverse(multMod).toByteArray(), 0, 2);
+            buf.put(BigInteger.valueOf(keys_enc[42 -i]).modInverse(multMod).intValue());
+            buf.put(-keys_enc[44 -i]);
+            buf.put(-keys_enc[43 -i]);
+            buf.put(BigInteger.valueOf(keys_enc[47 -i]).modInverse(multMod).intValue());
 
         }
 
         // there should be no bytes left for writing!
         assert(buf.remaining() == 0);
 
-        // ok, get back to beginning, and write first 104 bytes into an array of 52 shorts
-        short[] ret = new short[52];
+        // ok, get back to beginning, and write first 104 bytes into an array of 52 ints
+        int[] ret = new int[52];
         buf.flip();
-        buf.asShortBuffer().get(ret, 0, 52);
+        buf.get(ret, 0, 52);
 
         return ret;
 
@@ -151,7 +146,7 @@ public final class IDEA extends BlockCipher {
         //                           (byte) 0xf2, (byte) 0x12, (byte) 0xfc, (byte) 0xfa, (byte) 0xaa, (byte) 0xff, (byte) 0x91, (byte) 0xff };
 
         assert(args.length == 1 && args[0].length() == 16);
-        short[] subkeys = IDEA.idea_subkeys(new BigInteger(args[0].getBytes()));
+        int[] subkeys = IDEA.idea_subkeys(new BigInteger(args[0].getBytes()));
 
         for(int i = 0; i < subkeys.length; i++) {
             System.out.println(String.format("%04x", subkeys[i]));
@@ -166,7 +161,7 @@ public final class IDEA extends BlockCipher {
      * @param key 52 subkeys
      *
      */
-    public static void idea_block(short[] in, short[] out, short[] subkeys) {
+    public static void idea_block(int[] in, int[] out, int[] subkeys) {
         assert(in.length == 4 && out.length == 4);
         assert(subkeys.length == 52);
 
@@ -188,27 +183,27 @@ public final class IDEA extends BlockCipher {
      * @param out 64 bits of output
      * @param key 96 bit key
      */
-    public static void idea_round(short[] in, short[] out, short[] key, int key_offset) {
+    public static void idea_round(int[] in, int[] out, int[] key, int key_offset) {
         assert(in.length == 4 && out.length == 4);
         assert(key.length >= key_offset +6);
 
         // first layer
-        out[0] = (short) (in[0] * key[key_offset+0] & 0xffff);
-        out[1] = (short) (in[1] + key[key_offset+1] & 0xffff);
-        out[2] = (short) (in[2] + key[key_offset+2] & 0xffff);
-        out[3] = (short) (in[3] * key[key_offset+3] & 0xffff);
+        out[0] = (int) (in[0] * key[key_offset+0] & 0xffff);
+        out[1] = (int) (in[1] + key[key_offset+1] & 0xffff);
+        out[2] = (int) (in[2] + key[key_offset+2] & 0xffff);
+        out[3] = (int) (in[3] * key[key_offset+3] & 0xffff);
 
         // intermediate values
-        in[0] = (short) ( (out[0] ^ out[2]) * key[key_offset+4] & 0xffff);
-        in[1] = (short) ( (out[1] ^ out[3]) + in[0] & 0xffff);
-        in[2] = (short) ( in[1] + key[key_offset+5] & 0xffff);
-        in[3] = (short) ( in[0] + in[2] & 0xffff);
+        in[0] = (int) ( (out[0] ^ out[2]) * key[key_offset+4] & 0xffff);
+        in[1] = (int) ( (out[1] ^ out[3]) + in[0] & 0xffff);
+        in[2] = (int) ( in[1] + key[key_offset+5] & 0xffff);
+        in[3] = (int) ( in[0] + in[2] & 0xffff);
 
         // bottom xor-layer
-        out[0] = (short) (out[0] ^ in[2]);
-        out[1] = (short) (out[2] ^ in[2]);
-        out[2] = (short) (out[1] ^ in[3]);
-        out[3] = (short) (out[3] ^ in[3]);
+        out[0] = (int) (out[0] ^ in[2]);
+        out[1] = (int) (out[2] ^ in[2]);
+        out[2] = (int) (out[1] ^ in[3]);
+        out[3] = (int) (out[3] ^ in[3]);
 
     }
 
@@ -217,22 +212,22 @@ public final class IDEA extends BlockCipher {
      * @param out 64 bits of output
      * @param key 64 bit key
      */
-    public static void idea_halfround(short[] in, short[] out, short[] key, int key_offset) {
+    public static void idea_halfround(int[] in, int[] out, int[] key, int key_offset) {
         assert(in.length == 4 && out.length == 4);
         assert(key.length >= key_offset +4);
 
         // we use our time here to make sure with some assertions that the
         // down-casting does not shave off any of our precision
-        out[0] = (short) (in[0] * key[key_offset+0] & 0xffff);
+        out[0] = (int) (in[0] * key[key_offset+0] & 0xffff);
         assert(out[0] == (in[0] * key[key_offset+0] & 0xffff));
 
-        out[1] = (short) (in[2] + key[key_offset+1] & 0xffff);
+        out[1] = (int) (in[2] + key[key_offset+1] & 0xffff);
         assert(out[1] == (in[2] + key[key_offset+1] & 0xffff));
 
-        out[2] = (short) (in[1] + key[key_offset+2] & 0xffff);
+        out[2] = (int) (in[1] + key[key_offset+2] & 0xffff);
         assert(out[2] == (in[1] + key[key_offset+2] & 0xffff));
 
-        out[3] = (short) (in[3] * key[key_offset+3] & 0xffff);
+        out[3] = (int) (in[3] * key[key_offset+3] & 0xffff);
         assert(out[3] == (in[3] * key[key_offset+3] & 0xffff));
 
     }
@@ -252,32 +247,32 @@ public final class IDEA extends BlockCipher {
             byte[] initVectorBytes = new byte[8];
 
             ciphertext.read(initVectorBytes);
-            short[] initVector = new short[initVectorBytes.length / 2];
+            int[] initVector = new int[initVectorBytes.length / 2];
             ByteBuffer.wrap(initVectorBytes)
-                    .order(java.nio.ByteOrder.LITTLE_ENDIAN).asShortBuffer()
+                    .order(java.nio.ByteOrder.LITTLE_ENDIAN).asintBuffer()
                     .get(initVector);
 
             byte[] ciphertextBytes = new byte[8];
             ciphertext.read(ciphertextBytes);
 
-            short[] lastCipherBlock = initVector;
+            int[] lastCipherBlock = initVector;
             while (ciphertextBytes.length == 8) {
-                short[] ciphertextBlock = new short[4];
+                int[] ciphertextBlock = new int[4];
                 ByteBuffer.wrap(ciphertextBytes)
                         .order(java.nio.ByteOrder.LITTLE_ENDIAN)
-                        .asShortBuffer().get(ciphertextBlock);
+                        .asintBuffer().get(ciphertextBlock);
 
-                short[] intermediate = new short[4];
+                int[] intermediate = new int[4];
                 idea_block(ciphertextBlock, intermediate, this.keys_dec);
 
-                short[] cleartextBlock = new short[4];
+                int[] cleartextBlock = new int[4];
                 for (int i = 0; i < 4; i++) {
-                    cleartextBlock[i] = (short) (intermediate[i] ^ lastCipherBlock[i]);
+                    cleartextBlock[i] = (int) (intermediate[i] ^ lastCipherBlock[i]);
                 }
 
                 ByteBuffer byteBuf = ByteBuffer.allocate(8);
                 for (int i = 0; i < 4; i++) {
-                    byteBuf.putShort(cleartextBlock[i]);
+                    byteBuf.putint(cleartextBlock[i]);
                     i++;
                 }
 
@@ -307,32 +302,32 @@ public final class IDEA extends BlockCipher {
                     .toByteArray();
             ciphertext.write(initVectorBytes); // write init vector as 0. block into ciphertext
 
-            short[] initVector = new short[initVectorBytes.length / 2];
+            int[] initVector = new int[initVectorBytes.length / 2];
             ByteBuffer.wrap(initVectorBytes)
-                    .order(java.nio.ByteOrder.LITTLE_ENDIAN).asShortBuffer()
+                    .order(java.nio.ByteOrder.LITTLE_ENDIAN).asintBuffer()
                     .get(initVector);
 
             byte[] cleartextBytes = new byte[8];
             cleartext.read(cleartextBytes);
 
-            short[] lastCipherBlock = initVector;
+            int[] lastCipherBlock = initVector;
             while (cleartextBytes.length == 8) {
-                short[] cleartextBlock = new short[4];
+                int[] cleartextBlock = new int[4];
                 ByteBuffer.wrap(cleartextBytes)
                         .order(java.nio.ByteOrder.LITTLE_ENDIAN)
-                        .asShortBuffer().get(cleartextBlock);
+                        .asintBuffer().get(cleartextBlock);
 
-                short[] input = new short[4];
+                int[] input = new int[4];
                 for (int i = 0; i < 4; i++) {
-                    input[i] = (short) (cleartextBlock[i] ^ lastCipherBlock[i]);
+                    input[i] = (int) (cleartextBlock[i] ^ lastCipherBlock[i]);
                 }
 
-                short[] ciphertextBlock = new short[4];
+                int[] ciphertextBlock = new int[4];
 
                 idea_block(input, ciphertextBlock, this.keys_enc);
                 ByteBuffer byteBuf = ByteBuffer.allocate(8);
                 for (int i = 0; i < 4; i++) {
-                    byteBuf.putShort(ciphertextBlock[i]);
+                    byteBuf.putint(ciphertextBlock[i]);
                     i++;
                 }
 
