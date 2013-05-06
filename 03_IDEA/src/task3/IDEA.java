@@ -118,6 +118,25 @@ public final class IDEA extends BlockCipher {
     public static void idea_round(short[] in, short[] out, short[] key, int key_offset) {
         assert(in.length == 4 && out.length == 4);
         assert(key.length >= key_offset +6);
+
+        // first layer
+        out[0] = (short) (in[0] * key[key_offset+0] & 0xffff);
+        out[1] = (short) (in[1] + key[key_offset+1] & 0xffff);
+        out[2] = (short) (in[2] + key[key_offset+2] & 0xffff);
+        out[3] = (short) (in[3] * key[key_offset+3] & 0xffff);
+
+        // intermediate values
+        in[0] = (short) ( (out[0] ^ out[2]) * key[key_offset+4] & 0xffff);
+        in[1] = (short) ( (out[1] ^ out[3]) + in[0] & 0xffff);
+        in[2] = (short) ( in[1] + key[key_offset+5] & 0xffff);
+        in[3] = (short) ( in[0] + in[2] & 0xffff);
+
+        // bottom xor-layer
+        out[0] = (short) (out[0] ^ in[2]);
+        out[1] = (short) (out[2] ^ in[2]);
+        out[2] = (short) (out[1] ^ in[3]);
+        out[3] = (short) (out[3] ^ in[3]);
+
     }
 
     /** One half-round of IDEA.
@@ -128,6 +147,21 @@ public final class IDEA extends BlockCipher {
     public static void idea_halfround(short[] in, short[] out, short[] key, int key_offset) {
         assert(in.length == 4 && out.length == 4);
         assert(key.length >= key_offset +4);
+
+        // we use our time here to make sure with some assertions that the
+        // down-casting does not shave off any of our precision
+        out[0] = (short) (in[0] * key[key_offset+0] & 0xffff);
+        assert(out[0] == (in[0] * key[key_offset+0] & 0xffff));
+
+        out[1] = (short) (in[2] + key[key_offset+1] & 0xffff);
+        assert(out[1] == (in[2] + key[key_offset+1] & 0xffff));
+
+        out[2] = (short) (in[1] + key[key_offset+2] & 0xffff);
+        assert(out[2] == (in[1] + key[key_offset+2] & 0xffff));
+
+        out[3] = (short) (in[3] * key[key_offset+3] & 0xffff);
+        assert(out[3] == (in[3] * key[key_offset+3] & 0xffff));
+
     }
 
     /**
