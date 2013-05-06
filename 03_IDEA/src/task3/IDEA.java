@@ -104,7 +104,7 @@ public final class IDEA extends BlockCipher {
         // 8 idea rounds
         for(int i = 0; i < 8; i+=2) {
             // swap around in/out. note that the "in" array is used for temp
-            // values and thus destroyed in the processs.
+            // values and thus destroyed in the process.
             idea_round(in, out, subkeys, (i+0)*6);
             idea_round(out, in, subkeys, (i+1)*6);
         }
@@ -214,8 +214,17 @@ public final class IDEA extends BlockCipher {
                     input[i] = (short) (cleartextBlock[i] ^ lastCipherBlock[i]);
                 }
                 
-                //short[] ciphertextBlock = this.idea_block(input, , subkeys)
-                //ciphertext.write(idea_block()
+                short[] ciphertextBlock = new short[8];
+                short[] subkeys = IDEA.idea_subkeys(new BigInteger(new String("testblabla").getBytes()));
+
+                idea_block(input, ciphertextBlock, subkeys);
+                ByteBuffer byteBuf = ByteBuffer.allocate(16);
+                for (int i = 0; i < 8; i++) {
+                    byteBuf.putShort(ciphertextBlock[i]);
+                    i++;
+                }
+                
+                ciphertext.write(byteBuf.array());
                 
                 cleartext.read(cleartextBytes);
             }
