@@ -237,26 +237,34 @@ public final class IDEA extends BlockCipher {
      * Der FileOutputStream, in den der Chiffretext geschrieben werden soll.
      */
     public void encipher(FileInputStream cleartext, FileOutputStream ciphertext) {
-        byte[] initVectorBytes = new BigInteger(64, new Random()).toByteArray();
-        short[] initVector = new short[initVectorBytes.length / 2];
-        ByteBuffer.wrap(initVectorBytes).order(java.nio.ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(initVector);
-
         try {
+            byte[] initVectorBytes = new BigInteger(64, new Random())
+                    .toByteArray();
+            ciphertext.write(initVectorBytes); // write init vector as 0. block into ciphertext
+
+            short[] initVector = new short[initVectorBytes.length / 2];
+            ByteBuffer.wrap(initVectorBytes)
+                    .order(java.nio.ByteOrder.LITTLE_ENDIAN).asShortBuffer()
+                    .get(initVector);
+
             byte[] cleartextBytes = new byte[8];
             cleartext.read(cleartextBytes);
 
             short[] lastCipherBlock = initVector;
             while (cleartextBytes.length == 8) {
                 short[] cleartextBlock = new short[4];
-                ByteBuffer.wrap(cleartextBytes).order(java.nio.ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(cleartextBlock);
+                ByteBuffer.wrap(cleartextBytes)
+                        .order(java.nio.ByteOrder.LITTLE_ENDIAN)
+                        .asShortBuffer().get(cleartextBlock);
 
                 short[] input = new short[4];
                 for (int i = 0; i < 4; i++) {
                     input[i] = (short) (cleartextBlock[i] ^ lastCipherBlock[i]);
                 }
-                
+
                 short[] ciphertextBlock = new short[4];
-                short[] subkeys = IDEA.idea_subkeys(new BigInteger(new String("testblabla").getBytes()));
+                short[] subkeys = IDEA.idea_subkeys(new BigInteger(new String(
+                        "testblabla").getBytes()));
 
                 idea_block(input, ciphertextBlock, subkeys);
                 ByteBuffer byteBuf = ByteBuffer.allocate(8);
@@ -264,13 +272,14 @@ public final class IDEA extends BlockCipher {
                     byteBuf.putShort(ciphertextBlock[i]);
                     i++;
                 }
-                
+
                 ciphertext.write(byteBuf.array());
-                
+
                 cleartext.read(cleartextBytes);
             }
         } catch (IOException e) {
-            System.out.println("Encipher failed, could not read cleartext or write ciphertext.");
+            System.out
+                    .println("Encipher failed, could not read cleartext or write ciphertext.");
             e.printStackTrace();
         }
     }
