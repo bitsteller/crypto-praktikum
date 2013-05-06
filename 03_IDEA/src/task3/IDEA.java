@@ -386,4 +386,23 @@ public final class IDEA extends BlockCipher {
     public void writeKey(BufferedWriter key) {
 
     }
+    
+    public static void main(String[] args) throws IOException {
+        FileInputStream input = new FileInputStream(args[1]);
+        FileOutputStream output = new FileOutputStream(args[2]);
+        IDEA v = new IDEA();
+
+        if (args[0].equals("encipher")) {
+            v.encipher(input, output);
+            return;
+        }
+        else if (args[0].equals("decipher")) {
+            v.decipher(input, output);
+            return;
+        }
+        else {
+                System.out.println("Usage: $0 encipher|decipher infile outfile");
+        }
+
+    }
 }
