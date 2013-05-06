@@ -179,10 +179,51 @@ public final class IDEA extends BlockCipher {
      * Der FileOutputStream, in den der Klartext geschrieben werden soll.
      */
     public void decipher(FileInputStream ciphertext, FileOutputStream cleartext) {
-        // CBC here
-        // 1. create IV
-        // 2. do progressive cbc on inputstream
+        try {
+            byte[] initVectorBytes = new byte[8];
 
+            ciphertext.read(initVectorBytes);
+            short[] initVector = new short[initVectorBytes.length / 2];
+            ByteBuffer.wrap(initVectorBytes)
+                    .order(java.nio.ByteOrder.LITTLE_ENDIAN).asShortBuffer()
+                    .get(initVector);
+
+            byte[] ciphertextBytes = new byte[8];
+            ciphertext.read(ciphertextBytes);
+
+            short[] lastCipherBlock = initVector;
+            while (ciphertextBytes.length == 8) {
+                short[] ciphertextBlock = new short[4];
+                ByteBuffer.wrap(ciphertextBytes)
+                        .order(java.nio.ByteOrder.LITTLE_ENDIAN)
+                        .asShortBuffer().get(ciphertextBlock);
+
+                short[] subkeys = IDEA.idea_subkeys(new BigInteger(new String(
+                        "testblabla").getBytes())); // TODO: use decryption
+                                                    // keys!
+
+                short[] intermediate = new short[4];
+                idea_block(ciphertextBlock, intermediate, subkeys);
+
+                short[] cleartextBlock = new short[4];
+                for (int i = 0; i < 4; i++) {
+                    cleartextBlock[i] = (short) (intermediate[i] ^ lastCipherBlock[i]);
+                }
+
+                ByteBuffer byteBuf = ByteBuffer.allocate(8);
+                for (int i = 0; i < 4; i++) {
+                    byteBuf.putShort(cleartextBlock[i]);
+                    i++;
+                }
+
+                cleartext.write(byteBuf.array());
+
+                ciphertext.read(ciphertextBytes);
+            }
+        } catch (IOException e) {
+            System.out.println("Decipher failed, could not read ciphertext or write cleartext.");
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -201,25 +242,25 @@ public final class IDEA extends BlockCipher {
         ByteBuffer.wrap(initVectorBytes).order(java.nio.ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(initVector);
 
         try {
-            byte[] cleartextBytes = new byte[16];
+            byte[] cleartextBytes = new byte[8];
             cleartext.read(cleartextBytes);
 
             short[] lastCipherBlock = initVector;
-            while (cleartextBytes.length == 16) {
-                short[] cleartextBlock = new short[8];
+            while (cleartextBytes.length == 8) {
+                short[] cleartextBlock = new short[4];
                 ByteBuffer.wrap(cleartextBytes).order(java.nio.ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(cleartextBlock);
 
-                short[] input = new short[8];
-                for (int i = 0; i < 8; i++) {
+                short[] input = new short[4];
+                for (int i = 0; i < 4; i++) {
                     input[i] = (short) (cleartextBlock[i] ^ lastCipherBlock[i]);
                 }
                 
-                short[] ciphertextBlock = new short[8];
+                short[] ciphertextBlock = new short[4];
                 short[] subkeys = IDEA.idea_subkeys(new BigInteger(new String("testblabla").getBytes()));
 
                 idea_block(input, ciphertextBlock, subkeys);
-                ByteBuffer byteBuf = ByteBuffer.allocate(16);
-                for (int i = 0; i < 8; i++) {
+                ByteBuffer byteBuf = ByteBuffer.allocate(8);
+                for (int i = 0; i < 4; i++) {
                     byteBuf.putShort(ciphertextBlock[i]);
                     i++;
                 }
@@ -229,7 +270,7 @@ public final class IDEA extends BlockCipher {
                 cleartext.read(cleartextBytes);
             }
         } catch (IOException e) {
-            // TODO Auto-generated catch block
+            System.out.println("Encipher failed, could not read cleartext or write ciphertext.");
             e.printStackTrace();
         }
     }
