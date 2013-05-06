@@ -35,6 +35,8 @@ public final class IDEA extends BlockCipher {
     /// a bigint with first 128 bits set, needed for some bitwise trickery in idea_subkeys
     protected final static BigInteger _128bits = BigInteger.valueOf(0L).setBit(128).subtract(BigInteger.ONE);
 
+    short[] keys_enc, keys_dec;
+
     /** generate subkeys.
      *
      * The first eight sub-keys are extracted directly from the key, with
@@ -359,7 +361,12 @@ public final class IDEA extends BlockCipher {
      */
     public void makeKey() {
 
-        System.out.println("Dummy für die Schlüsselerzeugung.");
+        byte[] key = new byte[] { (byte) 0x42, (byte) 0x61, (byte) 0xce, (byte) 0xd1, (byte) 0xff, (byte) 0x55, (byte) 0xff, (byte) 0x1d,
+                                  (byte) 0xf2, (byte) 0x12, (byte) 0xfc, (byte) 0xfa, (byte) 0xaa, (byte) 0xff, (byte) 0x91, (byte) 0xff };
+
+        keys_enc = idea_subkeys(new BigInteger(key));
+        keys_dec = idea_deckeys(keys_enc);
+
     }
 
     /**
