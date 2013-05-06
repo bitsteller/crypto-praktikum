@@ -63,7 +63,7 @@ public final class IDEA extends BlockCipher {
         for(int i = 0; i < 6; i++) {
             // shift left by 25 bits in 128-bit rotation, and filter first 128 bits only
             key = key.shiftRight(103).or(key.shiftLeft(25)).and(_128bits).setBit(128);
-            assert(key.toByteArray().length == 9 && key.toByteArray()[0] == 0x01);
+            assert(key.toByteArray().length == 17 && key.toByteArray()[0] == 0x01);
             // put 16 bytes, or 8 for the last round
             buf.put(key.toByteArray(), 1, i < 5 ? 16 : 8);
         }
