@@ -267,12 +267,8 @@ public final class IDEA extends BlockCipher {
                         .order(java.nio.ByteOrder.LITTLE_ENDIAN)
                         .asShortBuffer().get(ciphertextBlock);
 
-                short[] subkeys = IDEA.idea_subkeys(new BigInteger(new String(
-                        "abcdefghijklmnop").getBytes())); // TODO: use decryption
-                                                    // keys!
-
                 short[] intermediate = new short[4];
-                idea_block(ciphertextBlock, intermediate, subkeys);
+                idea_block(ciphertextBlock, intermediate, this.keys_dec);
 
                 short[] cleartextBlock = new short[4];
                 for (int i = 0; i < 4; i++) {
@@ -332,10 +328,8 @@ public final class IDEA extends BlockCipher {
                 }
 
                 short[] ciphertextBlock = new short[4];
-                short[] subkeys = IDEA.idea_subkeys(new BigInteger(new String(
-                        "abcdefghijklmnop").getBytes()));
 
-                idea_block(input, ciphertextBlock, subkeys);
+                idea_block(input, ciphertextBlock, this.keys_enc);
                 ByteBuffer byteBuf = ByteBuffer.allocate(8);
                 for (int i = 0; i < 4; i++) {
                     byteBuf.putShort(ciphertextBlock[i]);
