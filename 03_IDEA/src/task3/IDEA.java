@@ -55,10 +55,11 @@ public final class IDEA extends BlockCipher {
         // bytes, then skip the first one
         key = key.and(_128bits).setBit(128);
         buf.put(key.toByteArray(), 1, 16);
-        // 8 keys + 6*8 keys = 56 keys
+        // 4 keys + 6*8 keys = 52 keys
         for(int i = 0; i < 6; i++) {
             // shift left by 25 bits in 128-bit rotation, and filter first 128 bits only
-            key = key.and(_128bits).shiftRight(103).or(key.shiftLeft(25)).setBit(128);
+            key = key.shiftRight(103).or(key.shiftLeft(25)).and(_128bits).setBit(128);
+            assert(key.toByteArray().length == 9 && key.toByteArray()[0] == 0x01);
             // put 16 bytes, or 8 for the last round
             buf.put(key.toByteArray(), 1, i < 5 ? 16 : 8);
         }
