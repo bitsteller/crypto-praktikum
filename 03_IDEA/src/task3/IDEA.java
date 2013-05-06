@@ -16,9 +16,11 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.util.Random;
 
 import de.tubs.cs.iti.jcrypt.chiffre.BlockCipher;
 
@@ -175,7 +177,6 @@ public final class IDEA extends BlockCipher {
      * Der FileOutputStream, in den der Klartext geschrieben werden soll.
      */
     public void decipher(FileInputStream ciphertext, FileOutputStream cleartext) {
-
         // CBC here
         // 1. create IV
         // 2. do progressive cbc on inputstream
@@ -193,9 +194,33 @@ public final class IDEA extends BlockCipher {
      * Der FileOutputStream, in den der Chiffretext geschrieben werden soll.
      */
     public void encipher(FileInputStream cleartext, FileOutputStream ciphertext) {
+        byte[] initVectorBytes = new BigInteger(64, new Random()).toByteArray();
+        short[] initVector = new short[initVectorBytes.length / 2];
+        ByteBuffer.wrap(initVectorBytes).order(java.nio.ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(initVector);
 
-        // CBC here
+        try {
+            byte[] cleartextBytes = new byte[16];
+            cleartext.read(cleartextBytes);
 
+            short[] lastCipherBlock = initVector;
+            while (cleartextBytes.length == 16) {
+                short[] cleartextBlock = new short[8];
+                ByteBuffer.wrap(cleartextBytes).order(java.nio.ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(cleartextBlock);
+
+                short[] input = new short[8];
+                for (int i = 0; i < 8; i++) {
+                    input[i] = (short) (cleartextBlock[i] ^ lastCipherBlock[i]);
+                }
+                
+                //short[] ciphertextBlock = this.idea_block(input, , subkeys)
+                //ciphertext.write(idea_block()
+                
+                cleartext.read(cleartextBytes);
+            }
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     /**
