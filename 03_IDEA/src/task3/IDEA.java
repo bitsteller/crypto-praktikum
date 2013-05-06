@@ -391,6 +391,7 @@ public final class IDEA extends BlockCipher {
         FileInputStream input = new FileInputStream(args[1]);
         FileOutputStream output = new FileOutputStream(args[2]);
         IDEA v = new IDEA();
+        v.makeKey();
 
         if (args[0].equals("encipher")) {
             v.encipher(input, output);
