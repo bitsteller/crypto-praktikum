@@ -268,7 +268,7 @@ public final class IDEA extends BlockCipher {
                         .asShortBuffer().get(ciphertextBlock);
 
                 short[] subkeys = IDEA.idea_subkeys(new BigInteger(new String(
-                        "testblabla").getBytes())); // TODO: use decryption
+                        "abcdefghijklmnop").getBytes())); // TODO: use decryption
                                                     // keys!
 
                 short[] intermediate = new short[4];
@@ -333,7 +333,7 @@ public final class IDEA extends BlockCipher {
 
                 short[] ciphertextBlock = new short[4];
                 short[] subkeys = IDEA.idea_subkeys(new BigInteger(new String(
-                        "testblabla").getBytes()));
+                        "abcdefghijklmnop").getBytes()));
 
                 idea_block(input, ciphertextBlock, subkeys);
                 ByteBuffer byteBuf = ByteBuffer.allocate(8);
