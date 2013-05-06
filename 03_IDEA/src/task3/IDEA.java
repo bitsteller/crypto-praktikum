@@ -77,6 +77,73 @@ public final class IDEA extends BlockCipher {
         return ret;
     }
 
+    /** generate decryption keys.
+     *
+     * implementation concept: http://www.quadibloc.com/crypto/co040302.htm
+     *
+     * @param keys_enc 52 subkeys to generate decryption keys for
+     * @return an array of 52 sequential decryption subkeys
+     *
+     */
+    public static short[] idea_deckeys(short[] keys_enc) {
+
+        BigInteger addMod = BigInteger.valueOf(65536L);
+        BigInteger multMod = BigInteger.valueOf(65537L);
+
+        // allocate buffer space
+        ByteBuffer buf = ByteBuffer.allocate(104);
+
+        /*
+            The first four subkeys for decryption are:
+
+            KD(1) = 1/K(49)
+            KD(2) =  -K(50)
+            KD(3) =  -K(51)
+            KD(4) = 1/K(52)
+        */
+        buf.put(BigInteger.valueOf(keys_enc[48]).modInverse(multMod).toByteArray(), 0, 2);
+        buf.put(BigInteger.valueOf(keys_enc[49]).negate().toByteArray(), 0, 2);
+        buf.put(BigInteger.valueOf(keys_enc[50]).negate().toByteArray(), 0, 2);
+        buf.put(BigInteger.valueOf(keys_enc[51]).modInverse(multMod).toByteArray(), 0, 2);
+
+        /*
+            The following is repeated eight times, adding 6 to every decryption key's index and subtracting 6 from every encryption key's index:
+        */
+        for(int i = 0; i < 48; i+=6) {
+
+            /*
+                KD(5)  =   K(47)
+                KD(6)  =   K(48)
+            */
+            buf.putShort(keys_enc[46 -i]);
+            buf.putShort(keys_enc[47 -i]);
+
+            /*
+                KD(7)  = 1/K(43)
+                KD(8)  =  -K(45)
+                KD(9)  =  -K(44)
+                KD(10) = 1/K(46)
+            */
+
+            buf.put(BigInteger.valueOf(keys_enc[42 -i]).modInverse(multMod).toByteArray(), 0, 2);
+            buf.put(BigInteger.valueOf(keys_enc[44 -i]).negate().toByteArray(), 0, 2);
+            buf.put(BigInteger.valueOf(keys_enc[43 -i]).negate().toByteArray(), 0, 2);
+            buf.put(BigInteger.valueOf(keys_enc[47 -i]).modInverse(multMod).toByteArray(), 0, 2);
+
+        }
+
+        // there should be no bytes left for writing!
+        assert(buf.remaining() == 0);
+
+        // ok, get back to beginning, and write first 104 bytes into an array of 52 shorts
+        short[] ret = new short[52];
+        buf.flip();
+        buf.asShortBuffer().get(ret, 0, 52);
+
+        return ret;
+
+    }
+
     public static void main_subkeys(String[] args) {
         // byte[] key = new byte[] { (byte) 0x42, (byte) 0x61, (byte) 0xce, (byte) 0xd1, (byte) 0xff, (byte) 0x55, (byte) 0xff, (byte) 0x1d,
         //                           (byte) 0xf2, (byte) 0x12, (byte) 0xfc, (byte) 0xfa, (byte) 0xaa, (byte) 0xff, (byte) 0x91, (byte) 0xff };

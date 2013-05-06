@@ -365,10 +365,10 @@ public class RunningKey extends Cipher {
                 }
             }
 
-            return new TreeSet(ret);
+            return new TreeSet<ScoredThingie>(ret);
         }
 
-        public static void main(String[] args) {
+        public static void main_testtopN(String[] args) {
             RunningKey k = new RunningKey(26);
 
             TreeSet<ScoredThingie> q = k.topN("john", 10, new double[] { 1.0d, 3.0d, 8.0d });
