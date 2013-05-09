@@ -269,15 +269,16 @@ public final class IDEA extends BlockCipher {
                 // convert to ints of 16 bits each
                 convertByteArrayToShortIntArray(block_byte, block_int);
 
+                // encrypt block with IDEA
+                //idea_block(block_int, block_int, this.keys_dec); //TODO add temp array
+                
                 // CBC: xor with last block
                 for (int i = 0; i < 4; i++) {
                     block_tmp[i] = block_int[i] ^ block_last[i];
                 }
-
-                // encrypt block with IDEA
-                //idea_block(block_int, block_last, this.keys_dec);
                 System.arraycopy(block_int, 0, block_last, 0, block_last.length);
 
+                
                 convertShortIntArrayToByteArray(block_tmp, block_byte);
 
                 // write to output
@@ -353,7 +354,7 @@ public final class IDEA extends BlockCipher {
             while ( (bytes_read = cleartext.read(block_byte)) > 0) {
                 // if there aren't enough bytes, fill with zeroes
                 if(bytes_read < 8)
-                    Arrays.fill(block_byte, bytes_read, 8, (byte) 0);
+                    Arrays.fill(block_byte, bytes_read-1, 8, (byte) 0);
 
                 // convert to ints of 16 bits each
                 convertByteArrayToShortIntArray(block_byte, block_int);
