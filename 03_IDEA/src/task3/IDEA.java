@@ -191,22 +191,22 @@ public final class IDEA extends BlockCipher {
         assert(key.length >= key_offset +6);
 
         // first layer
-        out[0] = (int) (in[0] * key[key_offset+0] & 0xffff);
-        out[1] = (int) (in[1] + key[key_offset+1] & 0xffff);
-        out[2] = (int) (in[2] + key[key_offset+2] & 0xffff);
-        out[3] = (int) (in[3] * key[key_offset+3] & 0xffff);
+        out[0] = in[0] * key[key_offset+0] & 0xffff;
+        out[1] = in[1] + key[key_offset+1] & 0xffff;
+        out[2] = in[2] + key[key_offset+2] & 0xffff;
+        out[3] = in[3] * key[key_offset+3] & 0xffff;
 
         // intermediate values
-        in[0] = (int) ( (out[0] ^ out[2]) * key[key_offset+4] & 0xffff);
-        in[1] = (int) ( (out[1] ^ out[3]) + in[0] & 0xffff);
-        in[2] = (int) ( in[1] + key[key_offset+5] & 0xffff);
-        in[3] = (int) ( in[0] + in[2] & 0xffff);
+        in[0] =  (out[0] ^ out[2]) * key[key_offset+4] & 0xffff;
+        in[1] =  (out[1] ^ out[3]) + in[0] & 0xffff;
+        in[2] = in[1] + key[key_offset+5] & 0xffff;
+        in[3] = in[0] + in[2] & 0xffff;
 
         // bottom xor-layer
-        out[0] = (int) (out[0] ^ in[2]);
-        out[1] = (int) (out[2] ^ in[2]);
-        out[2] = (int) (out[1] ^ in[3]);
-        out[3] = (int) (out[3] ^ in[3]);
+        out[0] = out[0] ^ in[2];
+        out[1] = out[2] ^ in[2];
+        out[2] = out[1] ^ in[3];
+        out[3] = out[3] ^ in[3];
 
     }
 
@@ -221,16 +221,16 @@ public final class IDEA extends BlockCipher {
 
         // we use our time here to make sure with some assertions that the
         // down-casting does not shave off any of our precision
-        out[0] = (int) (in[0] * key[key_offset+0] & 0xffff);
+        out[0] = in[0] * key[key_offset+0] & 0xffff;
         assert(out[0] == (in[0] * key[key_offset+0] & 0xffff));
 
-        out[1] = (int) (in[2] + key[key_offset+1] & 0xffff);
+        out[1] = in[2] + key[key_offset+1] & 0xffff;
         assert(out[1] == (in[2] + key[key_offset+1] & 0xffff));
 
-        out[2] = (int) (in[1] + key[key_offset+2] & 0xffff);
+        out[2] = in[1] + key[key_offset+2] & 0xffff;
         assert(out[2] == (in[1] + key[key_offset+2] & 0xffff));
 
-        out[3] = (int) (in[3] * key[key_offset+3] & 0xffff);
+        out[3] = in[3] * key[key_offset+3] & 0xffff;
         assert(out[3] == (in[3] * key[key_offset+3] & 0xffff));
 
     }
