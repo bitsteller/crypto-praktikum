@@ -279,9 +279,10 @@ public final class IDEA extends BlockCipher {
 
     
     private static int[] convertByteArrayToShortIntArray (byte[] bytes) {
+        assert(bytes.length % 2 == 0);
         int[] ints = new int[bytes.length/2];
         for (int i = 0; i < bytes.length; i+=2) {
-            ints[i/2] = (bytes[i] << 8) | bytes[i];
+            ints[i/2] = (bytes[i] << 8) | bytes[i+1];
         }
         return ints;
     }
@@ -317,10 +318,8 @@ public final class IDEA extends BlockCipher {
             int[] initVector = convertByteArrayToShortIntArray(initVectorBytes);
 
             byte[] cleartextBytes = new byte[8];
-            cleartext.read(cleartextBytes);
-
             int[] lastCipherBlock = initVector;
-            while (cleartextBytes.length == 8) {
+            while (cleartext.read(cleartextBytes) > 0){
                 int[] cleartextBlock = convertByteArrayToShortIntArray(cleartextBytes);
 
                 int[] input = new int[4];
@@ -333,8 +332,6 @@ public final class IDEA extends BlockCipher {
                 idea_block(input, ciphertextBlock, this.keys_enc);
              
                 ciphertext.write(convertShortIntArrayToByteArray(ciphertextBlock));
-
-                cleartext.read(cleartextBytes);
             }
         } catch (IOException e) {
             System.out
