@@ -278,25 +278,20 @@ public final class IDEA extends BlockCipher {
     }
 
     
-    private static int[] convertByteArrayToShortIntArray (byte[] bytes) {
-        assert(bytes.length % 2 == 0);
-        int[] ints = new int[bytes.length/2];
-        for (int i = 0; i < bytes.length; i+=2) {
-            ints[i/2] = (bytes[i] << 8) | bytes[i+1];
+    private static void convertByteArrayToShortIntArray(byte[] in, int[] out) {
+        assert(in.length % 2 == 0);
+        assert(in.length / 2 == out.length);
+        for (int i = 0; i < in.length; i+=2) {
+            out[i/2] = (in[i] << 8) | in[i+1];
         }
-        return ints;
     }
     
-    private static byte[] convertShortIntArrayToByteArray (int[] ints) {
-        ByteBuffer byteBuf = ByteBuffer.allocate(2*ints.length);
-        for (int i = 0; i < ints.length; i++) {
-            byteBuf.put((byte) (ints[i] >> 8));
-            byteBuf.put((byte) (ints[i]));
-            
-            i++;
+    private static void convertShortIntArrayToByteArray (int[] in, byte[] out) {
+        assert(in.length == out.length / 2);
+        for (int i = 0; i < in.length; i+=2) {
+            out[i] = (byte) (in[i/2] >> 8);
+            out[i+1] = (byte) (in[i/2]);
         }
-        
-        return byteBuf.array();
     }
     
     /**
@@ -316,31 +311,36 @@ public final class IDEA extends BlockCipher {
             ciphertext.write(initVectorBytes); // write init vector as 0. block into ciphertext
 
             // buffer for 8 bytes at a time
-            byte[] cleartextBytes = new byte[8];
+            byte[] block_byte = new byte[8];
+            // current ciphertext block (to be encrypted)
+            int[] block_int = new int[4];
             // lastCipherBlock for CBC, starting with IV
-            int[] lastCipherBlock = convertByteArrayToShortIntArray(initVectorBytes);
-            int[] input = new int[4];
-            int[] ciphertextBlock = new int[4];
+            int[] block_last = new int[4];
+            convertByteArrayToShortIntArray(initVectorBytes, block_last);
 
+            int[] input = new int[4];
             int bytes_read;
-            while ( (bytes_read = cleartext.read(cleartextBytes)) > 0) {
+
+            while ( (bytes_read = cleartext.read(block_byte)) > 0) {
                 // if there aren't enough bytes, fill with zeroes
                 if(bytes_read < 8)
-                    Arrays.fill(cleartextBytes, bytes_read, 8, (byte) 0);
+                    Arrays.fill(block_byte, bytes_read, 8, (byte) 0);
 
                 // convert to ints of 16 bits each
-                int[] cleartextBlock = convertByteArrayToShortIntArray(cleartextBytes);
+                convertByteArrayToShortIntArray(block_byte, block_int);
 
                 // CBC: xor with last block
                 for (int i = 0; i < 4; i++) {
-                    input[i] = (cleartextBlock[i] ^ lastCipherBlock[i]);
+                    block_int[i] ^= block_last[i];
                 }
 
                 // encrypt block with IDEA
-                idea_block(input, ciphertextBlock, this.keys_enc);
+                idea_block(block_int, block_last, this.keys_enc);
+
+                convertShortIntArrayToByteArray(block_last, block_byte);
 
                 // write to output
-                ciphertext.write(convertShortIntArrayToByteArray(ciphertextBlock));
+                ciphertext.write(block_byte);
 
             }
         } catch (IOException e) {
