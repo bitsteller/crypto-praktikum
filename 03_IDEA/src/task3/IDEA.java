@@ -246,33 +246,45 @@ public final class IDEA extends BlockCipher {
      * Der FileOutputStream, in den der Klartext geschrieben werden soll.
      */
     public void decipher(FileInputStream ciphertext, FileOutputStream cleartext) {
+
         try {
-            byte[] initVectorBytes = new byte[8];
 
-            ciphertext.read(initVectorBytes);
-            int[] initVector = convertByteArrayToShortIntArray(initVectorBytes);
+            // buffer for 8 bytes at a time
+            byte[] block_byte = new byte[8];
+            // current ciphertext block (to be encrypted)
+            int[] block_int = new int[4];
+            // lastCipherBlock for CBC, starting with IV
+            int[] block_last = new int[4];
 
-            byte[] ciphertextBytes = new byte[8];
-            ciphertext.read(ciphertextBytes);
+            // read IV from first block
+            ciphertext.read(block_byte);
+            convertByteArrayToShortIntArray(block_byte, block_last);
 
-            int[] lastCipherBlock = initVector;
-            while (ciphertextBytes.length == 8) {
-                int[] ciphertextBlock = convertByteArrayToShortIntArray(ciphertextBytes);
+            int bytes_read;
 
-                int[] intermediate = new int[4];
-                idea_block(ciphertextBlock, intermediate, this.keys_dec);
+            while ( (bytes_read = ciphertext.read(block_byte)) > 0) {
+                assert(bytes_read == 8);
 
-                int[] cleartextBlock = new int[4];
+                // convert to ints of 16 bits each
+                convertByteArrayToShortIntArray(block_byte, block_int);
+
+                // CBC: xor with last block
                 for (int i = 0; i < 4; i++) {
-                    cleartextBlock[i] = (int) (intermediate[i] ^ lastCipherBlock[i]);
+                    block_int[i] ^= block_last[i];
                 }
 
-                cleartext.write(convertShortIntArrayToByteArray(cleartextBlock));
+                // encrypt block with IDEA
+                idea_block(block_int, block_last, this.keys_dec);
 
-                ciphertext.read(ciphertextBytes);
+                convertShortIntArrayToByteArray(block_last, block_byte);
+
+                // write to output
+                cleartext.write(block_byte);
+
             }
         } catch (IOException e) {
-            System.out.println("Decipher failed, could not read ciphertext or write cleartext.");
+            System.out
+                    .println("Encipher failed, could not read cleartext or write ciphertext.");
             e.printStackTrace();
         }
     }
@@ -318,7 +330,6 @@ public final class IDEA extends BlockCipher {
             int[] block_last = new int[4];
             convertByteArrayToShortIntArray(initVectorBytes, block_last);
 
-            int[] input = new int[4];
             int bytes_read;
 
             while ( (bytes_read = cleartext.read(block_byte)) > 0) {
