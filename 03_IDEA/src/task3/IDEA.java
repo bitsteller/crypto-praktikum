@@ -255,6 +255,7 @@ public final class IDEA extends BlockCipher {
             int[] block_int = new int[4];
             // lastCipherBlock for CBC, starting with IV
             int[] block_last = new int[4];
+            int[] block_tmp = new int[4];
 
             // read IV from first block
             ciphertext.read(block_byte);
@@ -270,14 +271,14 @@ public final class IDEA extends BlockCipher {
 
                 // CBC: xor with last block
                 for (int i = 0; i < 4; i++) {
-                    block_int[i] ^= block_last[i];
+                    block_tmp[i] = block_int[i] ^ block_last[i];
                 }
 
                 // encrypt block with IDEA
                 //idea_block(block_int, block_last, this.keys_dec);
                 System.arraycopy(block_int, 0, block_last, 0, block_last.length);
 
-                convertShortIntArrayToByteArray(block_last, block_byte);
+                convertShortIntArrayToByteArray(block_tmp, block_byte);
 
                 // write to output
                 cleartext.write(block_byte);
