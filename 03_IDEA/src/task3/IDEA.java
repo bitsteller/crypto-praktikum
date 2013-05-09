@@ -274,7 +274,8 @@ public final class IDEA extends BlockCipher {
                 }
 
                 // encrypt block with IDEA
-                idea_block(block_int, block_last, this.keys_dec);
+                //idea_block(block_int, block_last, this.keys_dec);
+                System.arraycopy(block_int, 0, block_last, 0, block_last.length);
 
                 convertShortIntArrayToByteArray(block_last, block_byte);
 
@@ -318,17 +319,15 @@ public final class IDEA extends BlockCipher {
      */
     public void encipher(FileInputStream cleartext, FileOutputStream ciphertext) {
         try {
-            byte[] initVectorBytes = new BigInteger(64, new Random())
-                    .toByteArray();
-            ciphertext.write(initVectorBytes); // write init vector as 0. block into ciphertext
-
             // buffer for 8 bytes at a time
             byte[] block_byte = new byte[8];
             // current ciphertext block (to be encrypted)
             int[] block_int = new int[4];
             // lastCipherBlock for CBC, starting with IV
             int[] block_last = new int[4];
-            convertByteArrayToShortIntArray(initVectorBytes, block_last);
+            new Random().nextBytes(block_byte);
+            ciphertext.write(block_byte); // write init vector as 0. block into ciphertext
+            convertByteArrayToShortIntArray(block_byte, block_last);
 
             int bytes_read;
 
@@ -346,8 +345,9 @@ public final class IDEA extends BlockCipher {
                 }
 
                 // encrypt block with IDEA
-                idea_block(block_int, block_last, this.keys_enc);
-
+                //idea_block(block_int, block_last, this.keys_enc);
+                System.arraycopy(block_int, 0, block_last, 0, block_last.length);
+                
                 convertShortIntArrayToByteArray(block_last, block_byte);
 
                 // write to output
