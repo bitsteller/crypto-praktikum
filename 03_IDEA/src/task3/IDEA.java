@@ -20,7 +20,7 @@ import java.io.IOException;
 
 import java.math.BigInteger;
 import java.nio.*;
-import java.util.Random;
+import java.util.*;
 
 import de.tubs.cs.iti.jcrypt.chiffre.BlockCipher;
 
@@ -315,23 +315,33 @@ public final class IDEA extends BlockCipher {
                     .toByteArray();
             ciphertext.write(initVectorBytes); // write init vector as 0. block into ciphertext
 
-            int[] initVector = convertByteArrayToShortIntArray(initVectorBytes);
-
+            // buffer for 8 bytes at a time
             byte[] cleartextBytes = new byte[8];
-            int[] lastCipherBlock = initVector;
-            while (cleartext.read(cleartextBytes) > 0){
+            // lastCipherBlock for CBC, starting with IV
+            int[] lastCipherBlock = convertByteArrayToShortIntArray(initVectorBytes);
+            int[] input = new int[4];
+            int[] ciphertextBlock = new int[4];
+
+            int bytes_read;
+            while ( (bytes_read = cleartext.read(cleartextBytes)) > 0) {
+                // if there aren't enough bytes, fill with zeroes
+                if(bytes_read < 8)
+                    Arrays.fill(cleartextBytes, bytes_read, 8, (byte) 0);
+
+                // convert to ints of 16 bits each
                 int[] cleartextBlock = convertByteArrayToShortIntArray(cleartextBytes);
 
-                int[] input = new int[4];
+                // CBC: xor with last block
                 for (int i = 0; i < 4; i++) {
-                    input[i] = (int) (cleartextBlock[i] ^ lastCipherBlock[i]);
+                    input[i] = (cleartextBlock[i] ^ lastCipherBlock[i]);
                 }
 
-                int[] ciphertextBlock = new int[4];
-
+                // encrypt block with IDEA
                 idea_block(input, ciphertextBlock, this.keys_enc);
-             
+
+                // write to output
                 ciphertext.write(convertShortIntArrayToByteArray(ciphertextBlock));
+
             }
         } catch (IOException e) {
             System.out
