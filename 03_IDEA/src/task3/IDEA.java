@@ -280,11 +280,8 @@ public final class IDEA extends BlockCipher {
     
     private static int[] convertByteArrayToShortIntArray (byte[] bytes) {
         int[] ints = new int[bytes.length/2];
-        IntBuffer intBuf = ByteBuffer.wrap(bytes)
-                .order(java.nio.ByteOrder.BIG_ENDIAN).asIntBuffer();
-        for (int i = 0; i<8; i+=2) {
-            intBuf.get(ints[i]);
-            intBuf.get(ints[i+1]);
+        for (int i = 0; i < bytes.length; i+=2) {
+            ints[i/2] = (bytes[i] << 8) | bytes[i];
         }
         return ints;
     }
