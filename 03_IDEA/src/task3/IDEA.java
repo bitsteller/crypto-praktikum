@@ -247,20 +247,14 @@ public final class IDEA extends BlockCipher {
             byte[] initVectorBytes = new byte[8];
 
             ciphertext.read(initVectorBytes);
-            int[] initVector = new int[initVectorBytes.length / 2];
-            ByteBuffer.wrap(initVectorBytes)
-                    .order(java.nio.ByteOrder.LITTLE_ENDIAN).asintBuffer()
-                    .get(initVector);
+            int[] initVector = convertByteArrayToShortIntArray(initVectorBytes);
 
             byte[] ciphertextBytes = new byte[8];
             ciphertext.read(ciphertextBytes);
 
             int[] lastCipherBlock = initVector;
             while (ciphertextBytes.length == 8) {
-                int[] ciphertextBlock = new int[4];
-                ByteBuffer.wrap(ciphertextBytes)
-                        .order(java.nio.ByteOrder.LITTLE_ENDIAN)
-                        .asintBuffer().get(ciphertextBlock);
+                int[] ciphertextBlock = convertByteArrayToShortIntArray(ciphertextBytes);
 
                 int[] intermediate = new int[4];
                 idea_block(ciphertextBlock, intermediate, this.keys_dec);
@@ -270,13 +264,7 @@ public final class IDEA extends BlockCipher {
                     cleartextBlock[i] = (int) (intermediate[i] ^ lastCipherBlock[i]);
                 }
 
-                ByteBuffer byteBuf = ByteBuffer.allocate(8);
-                for (int i = 0; i < 4; i++) {
-                    byteBuf.putint(cleartextBlock[i]);
-                    i++;
-                }
-
-                cleartext.write(byteBuf.array());
+                cleartext.write(convertShortIntArrayToByteArray(cleartextBlock));
 
                 ciphertext.read(ciphertextBytes);
             }
@@ -286,6 +274,30 @@ public final class IDEA extends BlockCipher {
         }
     }
 
+    
+    private static int[] convertByteArrayToShortIntArray (byte[] bytes) {
+        int[] ints = new int[bytes.length/2];
+        IntBuffer intBuf = ByteBuffer.wrap(bytes)
+                .order(java.nio.ByteOrder.BIG_ENDIAN).asIntBuffer();
+        for (int i = 0; i<8; i+=2) {
+            intBuf.get(ints[i]);
+            intBuf.get(ints[i+1]);
+        }
+        return ints;
+    }
+    
+    private static byte[] convertShortIntArrayToByteArray (int[] ints) {
+        ByteBuffer byteBuf = ByteBuffer.allocate(2*ints.length);
+        for (int i = 0; i < ints.length; i++) {
+            byteBuf.put((byte) (ints[i] >> 8));
+            byteBuf.put((byte) (ints[i]));
+            
+            i++;
+        }
+        
+        return byteBuf.array();
+    }
+    
     /**
      * Verschlüsselt den durch den FileInputStream <code>cleartext</code>
      * gegebenen Klartext und schreibt den Chiffretext in den FileOutputStream
@@ -302,20 +314,14 @@ public final class IDEA extends BlockCipher {
                     .toByteArray();
             ciphertext.write(initVectorBytes); // write init vector as 0. block into ciphertext
 
-            int[] initVector = new int[initVectorBytes.length / 2];
-            ByteBuffer.wrap(initVectorBytes)
-                    .order(java.nio.ByteOrder.LITTLE_ENDIAN).asintBuffer()
-                    .get(initVector);
+            int[] initVector = convertByteArrayToShortIntArray(initVectorBytes);
 
             byte[] cleartextBytes = new byte[8];
             cleartext.read(cleartextBytes);
 
             int[] lastCipherBlock = initVector;
             while (cleartextBytes.length == 8) {
-                int[] cleartextBlock = new int[4];
-                ByteBuffer.wrap(cleartextBytes)
-                        .order(java.nio.ByteOrder.LITTLE_ENDIAN)
-                        .asintBuffer().get(cleartextBlock);
+                int[] cleartextBlock = convertByteArrayToShortIntArray(cleartextBytes);
 
                 int[] input = new int[4];
                 for (int i = 0; i < 4; i++) {
@@ -325,13 +331,8 @@ public final class IDEA extends BlockCipher {
                 int[] ciphertextBlock = new int[4];
 
                 idea_block(input, ciphertextBlock, this.keys_enc);
-                ByteBuffer byteBuf = ByteBuffer.allocate(8);
-                for (int i = 0; i < 4; i++) {
-                    byteBuf.putint(ciphertextBlock[i]);
-                    i++;
-                }
-
-                ciphertext.write(byteBuf.array());
+             
+                ciphertext.write(convertShortIntArrayToByteArray(ciphertextBlock));
 
                 cleartext.read(cleartextBytes);
             }
