@@ -292,14 +292,14 @@ public final class IDEA extends BlockCipher {
     
     private static void convertByteArrayToShortIntArray(byte[] in, int[] out) {
         assert(in.length % 2 == 0);
-        assert(in.length / 2 == out.length);
+        assert( (in.length+1) / 2 == out.length);
         for (int i = 0; i < in.length; i+=2) {
             out[i/2] = (in[i] << 8) | in[i+1];
         }
     }
     
     private static void convertShortIntArrayToByteArray (int[] in, byte[] out) {
-        assert(in.length == out.length / 2);
+        assert(in.length == (out.length+1) / 2);
         for (int i = 0; i < in.length; i+=2) {
             out[i] = (byte) (in[i/2] >> 8);
             out[i+1] = (byte) (in[i/2]);
