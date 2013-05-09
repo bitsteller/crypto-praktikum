@@ -48,31 +48,33 @@ public final class IDEA extends BlockCipher {
      * @return an array of 52 sequential subkeys
      *
      */
-    public static int[] idea_subkeys(BigInteger key) {
+    public static int[] idea_subkeys(BigInteger bI) {
         // there should be no bits set after the 128th! this is basically key.length == 16
-        assert(key.and(_128bits).equals(key));
+        assert(bI.and(_128bits).equals(bI));
 
         // allocate buffer space
-        int[] ret = new int[52];
+        int[] encryptKeys = new int[52];
+        byte[] key = bI.setBit(128).toByteArray();
 
-        // BigInteger trickery: set 128th bit to make sure we get exactly 9
-        // bytes, then skip the first one
-        key = key.and(_128bits).setBit(128);
-        byte[] buf = key.toByteArray();
-        for(int j = 0; j < 16; j+=2)
-            ret[j] = buf[j] | (buf[j+1] << 8);
+        // Encryption keys.  The first 8 key values come from the 16
+        // user-supplied key bytes.
+        int k1;
 
-        // 4 keys + 6*8 keys = 52 keys
-        for(int i = 0; i < 6; i++) {
-            // shift left by 25 bits in 128-bit rotation, and filter first 128 bits only
-            key = key.shiftRight(103).or(key.shiftLeft(25)).and(_128bits).setBit(128);
-            assert(key.toByteArray().length == 17 && key.toByteArray()[0] == 0x01);
-            // put 16 bytes, or 8 for the last round
-            for(int j = 0, end = i < 5 ? 16 : 8; j < end; j+=2)
-                ret[i*6+j] = buf[j+1] | (buf[j+2] << 8);
-        }
+        // Encryption keys.  The first 8 key values come from the 16
+        // user-supplied key bytes.
+        for ( k1 = 0; k1 < 8; ++k1 )
+            encryptKeys[k1] =
+                ( ( key[2 * k1 +1] & 0xff ) << 8 ) | ( key[ 2 * k1 +2] & 0xff );
 
-        return ret;
+        // Subsequent key values are the previous values rotated to the
+        // left by 25 bits.
+
+        for ( ; k1 < 52; ++k1 )
+            encryptKeys[k1] =
+                ( ( encryptKeys[k1 - 8] << 9 ) |
+                  ( encryptKeys[k1 - 7] >>> 7 ) ) & 0xffff;
+
+        return encryptKeys;
     }
 
     /** generate decryption keys.
@@ -100,8 +102,8 @@ public final class IDEA extends BlockCipher {
             KD(4) = 1/K(52)
         */
         buf.put(BigInteger.valueOf(keys_enc[48]).modInverse(multMod).intValue());
-        buf.put(-keys_enc[49]);
-        buf.put(-keys_enc[50]);
+        buf.put(-keys_enc[49] & 0xffff);
+        buf.put(-keys_enc[50] & 0xffff);
         buf.put(BigInteger.valueOf(keys_enc[51]).modInverse(multMod).intValue());
 
         /*
@@ -123,8 +125,8 @@ public final class IDEA extends BlockCipher {
                 KD(10) = 1/K(46)
             */
             buf.put(BigInteger.valueOf(keys_enc[42 -i]).modInverse(multMod).intValue());
-            buf.put(-keys_enc[44 -i]);
-            buf.put(-keys_enc[43 -i]);
+            buf.put(-keys_enc[44 -i] & 0xffff);
+            buf.put(-keys_enc[43 -i] & 0xffff);
             buf.put(BigInteger.valueOf(keys_enc[47 -i]).modInverse(multMod).intValue());
 
         }
@@ -141,15 +143,16 @@ public final class IDEA extends BlockCipher {
 
     }
 
-    public static void main_subkeys(String[] args) {
-        // byte[] key = new byte[] { (byte) 0x42, (byte) 0x61, (byte) 0xce, (byte) 0xd1, (byte) 0xff, (byte) 0x55, (byte) 0xff, (byte) 0x1d,
-        //                           (byte) 0xf2, (byte) 0x12, (byte) 0xfc, (byte) 0xfa, (byte) 0xaa, (byte) 0xff, (byte) 0x91, (byte) 0xff };
+    public static void main(String[] args) {
+        byte[] key = new byte[] { (byte) 0x42, (byte) 0x61, (byte) 0xce, (byte) 0xd1, (byte) 0xff, (byte) 0x55, (byte) 0xff, (byte) 0x1d,
+                                  (byte) 0xf2, (byte) 0x12, (byte) 0xfc, (byte) 0xfa, (byte) 0xaa, (byte) 0xff, (byte) 0x91, (byte) 0xff };
 
         assert(args.length == 1 && args[0].length() == 16);
-        int[] subkeys = IDEA.idea_subkeys(new BigInteger(args[0].getBytes()));
+        int[] subkeys = IDEA.idea_subkeys(new BigInteger(key)); //args[0].getBytes()));
+        int[] deckeys = IDEA.idea_deckeys(subkeys); //args[0].getBytes()));
 
         for(int i = 0; i < subkeys.length; i++) {
-            System.out.println(String.format("%04x", subkeys[i]));
+            System.out.println(String.format("%04x %04x", subkeys[i], deckeys[i]));
         }
 
     }
@@ -383,7 +386,7 @@ public final class IDEA extends BlockCipher {
 
     }
     
-    public static void main(String[] args) throws IOException {
+    public static void mainx(String[] args) throws IOException {
         FileInputStream input = new FileInputStream(args[1]);
         FileOutputStream output = new FileOutputStream(args[2]);
         IDEA v = new IDEA();
