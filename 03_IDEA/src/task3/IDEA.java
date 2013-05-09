@@ -143,7 +143,7 @@ public final class IDEA extends BlockCipher {
 
     }
 
-    public static void main(String[] args) {
+    public static void mainx(String[] args) {
         byte[] key = new byte[] { (byte) 0x42, (byte) 0x61, (byte) 0xce, (byte) 0xd1, (byte) 0xff, (byte) 0x55, (byte) 0xff, (byte) 0x1d,
                                   (byte) 0xf2, (byte) 0x12, (byte) 0xfc, (byte) 0xfa, (byte) 0xaa, (byte) 0xff, (byte) 0x91, (byte) 0xff };
 
@@ -383,7 +383,7 @@ public final class IDEA extends BlockCipher {
 
     }
     
-    public static void mainx(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException {
         FileInputStream input = new FileInputStream(args[1]);
         FileOutputStream output = new FileOutputStream(args[2]);
         IDEA v = new IDEA();
