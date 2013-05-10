@@ -239,6 +239,12 @@ public final class IDEA extends BlockCipher {
 
     }
     
+    /**
+     * Converts an array of bytes to an array of ints filled with 2 bytes each.
+     * The size of the in array has to be even. The out array must have the half size of the byte array.
+     * @param in Array of bytes
+     * @param out Int Array to write the short values in
+     */
     private static void convertByteArrayToShortIntArray(byte[] in, int[] out) {
         assert(in.length % 2 == 0);
         assert( (in.length+1) / 2 == out.length);
@@ -247,6 +253,12 @@ public final class IDEA extends BlockCipher {
         }
     }
     
+    /**
+     * Converts an array full of ints with 2 bytes in each int to a byte array.
+     * The out array must have the doubled size of the in array
+     * @param in Int array containing short values
+     * @param out Byte array
+     */
     private static void convertShortIntArrayToByteArray (int[] in, byte[] out) {
         assert(in.length == (out.length+1) / 2);
         for (int i = 0; i < out.length; i+=2) {
@@ -449,7 +461,8 @@ public final class IDEA extends BlockCipher {
         IDEA v = new IDEA();
         v.makeKey();
         
-        byte[] cleartext = new byte[] { (byte) 0, (byte) 1, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0 };
+        //encipher and decipher sample byte array
+        byte[] cleartext = new byte[] { (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0 };
         ByteArrayOutputStream ciphertextStream = new ByteArrayOutputStream();
         v.encipher(new ByteArrayInputStream(cleartext), ciphertextStream);
         byte [] ciphertext = ciphertextStream.toByteArray();
