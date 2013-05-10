@@ -480,4 +480,12 @@ public final class IDEA extends BlockCipher {
             System.out.print(c + " ");
         }
     }
+
+    public void decipher(FileInputStream arg0, FileOutputStream arg1) {
+        this.decipher(arg0, arg1);
+    }
+
+    public void encipher(FileInputStream arg0, FileOutputStream arg1) {
+        this.encipher(arg0, arg1);
+    }
 }
