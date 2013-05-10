@@ -256,6 +256,7 @@ public final class IDEA extends BlockCipher {
             // lastCipherBlock for CBC, starting with IV
             int[] block_last = new int[4];
             int[] block_tmp = new int[4];
+            int[] block_cipher = new int[4];;
 
             // read IV from first block
             ciphertext.read(block_byte);
@@ -267,17 +268,17 @@ public final class IDEA extends BlockCipher {
                 assert(bytes_read == 8);
 
                 // convert to ints of 16 bits each
-                convertByteArrayToShortIntArray(block_byte, block_int);
+                convertByteArrayToShortIntArray(block_byte, block_cipher);
 
                 // encrypt block with IDEA
-                //idea_block(block_int, block_int, this.keys_dec); //TODO add temp array
+                //idea_block(block_cipher, block_int, this.keys_dec);
+                System.arraycopy(block_cipher, 0, block_int, 0, block_last.length); //test: without IDEA
                 
                 // CBC: xor with last block
                 for (int i = 0; i < 4; i++) {
                     block_tmp[i] = block_int[i] ^ block_last[i];
                 }
-                System.arraycopy(block_int, 0, block_last, 0, block_last.length);
-
+                System.arraycopy(block_cipher, 0, block_last, 0, block_last.length);
                 
                 convertShortIntArrayToByteArray(block_tmp, block_byte);
 
@@ -365,8 +366,8 @@ public final class IDEA extends BlockCipher {
                 }
 
                 // encrypt block with IDEA
-                //idea_block(block_int, block_last, this.keys_enc);
-                System.arraycopy(block_int, 0, block_last, 0, block_last.length);
+               //idea_block(block_int, block_last, this.keys_enc);
+                System.arraycopy(block_int, 0, block_last, 0, block_last.length); //test: without IDEA
                 
                 convertShortIntArrayToByteArray(block_last, block_byte);
 
