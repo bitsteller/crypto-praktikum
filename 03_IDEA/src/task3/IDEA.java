@@ -14,9 +14,13 @@ package task3;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 import java.math.BigInteger;
 import java.nio.*;
@@ -234,6 +238,22 @@ public final class IDEA extends BlockCipher {
         assert(out[3] == (in[3] * key[key_offset+3] & 0xffff));
 
     }
+    
+    private static void convertByteArrayToShortIntArray(byte[] in, int[] out) {
+        assert(in.length % 2 == 0);
+        assert( (in.length+1) / 2 == out.length);
+        for (int i = 0; i < in.length; i+=2) {
+            out[i/2] = ((in[i] & 0xff) << 8) | (in[i+1] & 0xff);
+        }
+    }
+    
+    private static void convertShortIntArrayToByteArray (int[] in, byte[] out) {
+        assert(in.length == (out.length+1) / 2);
+        for (int i = 0; i < out.length; i+=2) {
+            out[i] = (byte) (in[i/2] >>> 8);
+            out[i+1] = (byte) (in[i/2]);
+        }
+    }
 
     /**
      * Entschlüsselt den durch den FileInputStream <code>ciphertext</code>
@@ -245,7 +265,7 @@ public final class IDEA extends BlockCipher {
      * @param cleartext
      * Der FileOutputStream, in den der Klartext geschrieben werden soll.
      */
-    public void decipher(FileInputStream ciphertext, FileOutputStream cleartext) {
+    public void decipher(InputStream ciphertext, OutputStream cleartext) {
 
         try {
 
@@ -293,41 +313,6 @@ public final class IDEA extends BlockCipher {
         }
     }
 
-    
-    private static void convertByteArrayToShortIntArray(byte[] in, int[] out) {
-        assert(in.length % 2 == 0);
-        assert( (in.length+1) / 2 == out.length);
-        for (int i = 0; i < in.length; i+=2) {
-            out[i/2] = ((in[i] & 0xff) << 8) | (in[i+1] & 0xff);
-        }
-    }
-    
-    private static void convertShortIntArrayToByteArray (int[] in, byte[] out) {
-        assert(in.length == (out.length+1) / 2);
-        for (int i = 0; i < out.length; i+=2) {
-            out[i] = (byte) (in[i/2] >>> 8);
-            out[i+1] = (byte) (in[i/2]);
-        }
-    }
-
-    public static void main_testconvert(String[] args) {
-        byte[] buf1 = new byte[256], buf2 = new byte[256];
-        int[] buf3 = new int[128];
-
-        new Random().nextBytes(buf1);
-
-        convertByteArrayToShortIntArray(buf1, buf3);
-        convertShortIntArrayToByteArray(buf3, buf2);
-
-        for(int i = 0; i < buf1.length; i++) {
-            System.out.println(String.format("%02x %02x %04x", buf1[i], buf2[i], buf3[i/2]));
-            if(false && buf1[i] != buf2[i]) {
-                System.out.println("wtf " + i);
-                return;
-            }
-        }
-    }
-
     /**
      * Verschlüsselt den durch den FileInputStream <code>cleartext</code>
      * gegebenen Klartext und schreibt den Chiffretext in den FileOutputStream
@@ -338,7 +323,7 @@ public final class IDEA extends BlockCipher {
      * @param ciphertext
      * Der FileOutputStream, in den der Chiffretext geschrieben werden soll.
      */
-    public void encipher(FileInputStream cleartext, FileOutputStream ciphertext) {
+    public void encipher(InputStream cleartext, OutputStream ciphertext) {
         try {
             // buffer for 8 bytes at a time
             byte[] block_byte = new byte[8];
@@ -440,5 +425,46 @@ public final class IDEA extends BlockCipher {
                 System.out.println("Usage: $0 encipher|decipher infile outfile");
         }
 
+    }
+    
+    public static void main_testconvert(String[] args) {
+        byte[] buf1 = new byte[256], buf2 = new byte[256];
+        int[] buf3 = new int[128];
+
+        new Random().nextBytes(buf1);
+
+        convertByteArrayToShortIntArray(buf1, buf3);
+        convertShortIntArrayToByteArray(buf3, buf2);
+
+        for(int i = 0; i < buf1.length; i++) {
+            System.out.println(String.format("%02x %02x %04x", buf1[i], buf2[i], buf3[i/2]));
+            if(false && buf1[i] != buf2[i]) {
+                System.out.println("wtf " + i);
+                return;
+            }
+        }
+    }
+    
+    public static void main_testidea(String[] args) {
+        IDEA v = new IDEA();
+        v.makeKey();
+        
+        byte[] cleartext = new byte[] { (byte) 0, (byte) 1, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0 };
+        ByteArrayOutputStream ciphertextStream = new ByteArrayOutputStream();
+        v.encipher(new ByteArrayInputStream(cleartext), ciphertextStream);
+        byte [] ciphertext = ciphertextStream.toByteArray();
+        System.out.print("Ciphertext:");
+        for (byte b: ciphertext) {
+            System.out.print(b + " ");
+        }
+        System.out.println();
+        
+        ByteArrayOutputStream cleartextStream = new ByteArrayOutputStream();
+        v.decipher(new ByteArrayInputStream(ciphertext), cleartextStream);
+        byte [] cleartext_dec = cleartextStream.toByteArray();
+        System.out.print("Cleartext deciphered:");
+        for (byte c: cleartext_dec) {
+            System.out.print(c + " ");
+        }
     }
 }
