@@ -460,7 +460,7 @@ public final class IDEA extends BlockCipher {
     public static void main_testidea(String[] args) {
         IDEA v = new IDEA();
         v.makeKey();
-        
+
         //encipher and decipher sample byte array
         byte[] cleartext = new byte[] { (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0 };
         ByteArrayOutputStream ciphertextStream = new ByteArrayOutputStream();
@@ -482,10 +482,10 @@ public final class IDEA extends BlockCipher {
     }
 
     public void decipher(FileInputStream arg0, FileOutputStream arg1) {
-        this.decipher(arg0, arg1);
+        this.decipher((InputStream)arg0, (OutputStream)arg1);
     }
 
     public void encipher(FileInputStream arg0, FileOutputStream arg1) {
-        this.encipher(arg0, arg1);
+        this.encipher((InputStream) arg0, (OutputStream) arg1);
     }
 }
