@@ -419,7 +419,7 @@ public final class IDEA extends BlockCipher {
 
     }
     
-    public static void main_old(String[] args) throws IOException {
+    public static void main_old(String[] args) throws IOException { //main
         FileInputStream input = new FileInputStream(args[1]);
         FileOutputStream output = new FileOutputStream(args[2]);
         IDEA v = new IDEA();
@@ -457,7 +457,7 @@ public final class IDEA extends BlockCipher {
         }
     }
     
-    public static void main(String[] args) {
+    public static void main(String[] args) { //main_testidea
         IDEA v = new IDEA();
         v.makeKey();
 
