@@ -303,8 +303,8 @@ public final class IDEA extends BlockCipher {
                 convertByteArrayToShortIntArray(block_byte, block_cipher);
 
                 // encrypt block with IDEA
-                //idea_block(block_cipher, block_int, this.keys_dec);
-                System.arraycopy(block_cipher, 0, block_int, 0, block_last.length); //test: without IDEA
+                idea_block(block_cipher, block_int, this.keys_dec);
+                //System.arraycopy(block_cipher, 0, block_int, 0, block_last.length); //test: without IDEA
                 
                 // CBC: xor with last block
                 for (int i = 0; i < 4; i++) {
@@ -363,8 +363,8 @@ public final class IDEA extends BlockCipher {
                 }
 
                 // encrypt block with IDEA
-               //idea_block(block_int, block_last, this.keys_enc);
-                System.arraycopy(block_int, 0, block_last, 0, block_last.length); //test: without IDEA
+                idea_block(block_int, block_last, this.keys_enc);
+                //System.arraycopy(block_int, 0, block_last, 0, block_last.length); //test: without IDEA
                 
                 convertShortIntArrayToByteArray(block_last, block_byte);
 
@@ -419,7 +419,7 @@ public final class IDEA extends BlockCipher {
 
     }
     
-    public static void main(String[] args) throws IOException {
+    public static void main_old(String[] args) throws IOException {
         FileInputStream input = new FileInputStream(args[1]);
         FileOutputStream output = new FileOutputStream(args[2]);
         IDEA v = new IDEA();
@@ -457,26 +457,41 @@ public final class IDEA extends BlockCipher {
         }
     }
     
-    public static void main_testidea(String[] args) {
+    public static void main(String[] args) {
         IDEA v = new IDEA();
         v.makeKey();
 
         //encipher and decipher sample byte array
-        byte[] cleartext = new byte[] { (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0 };
-        ByteArrayOutputStream ciphertextStream = new ByteArrayOutputStream();
-        v.encipher(new ByteArrayInputStream(cleartext), ciphertextStream);
-        byte [] ciphertext = ciphertextStream.toByteArray();
+        byte[] cleartext = new byte[] { (byte) 1, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0 };
+        int[] cleartextInts = new int[4];
+        byte[] ciphertext = new byte[8];
+        int[] ciphertextInts = new int[4];
+        byte[] cleartextDec = new byte[8];
+        int[] cleartextDecInts = new int[4];
+
+        System.out.print("Cleartext:");
+        for (byte b: cleartext) {
+            System.out.print(b + " ");
+        }
+        System.out.println();
+        
+        //Cipher one single cleartext block with IDEA (no CBC)
+        convertByteArrayToShortIntArray(cleartext,cleartextInts);
+        idea_block(cleartextInts, ciphertextInts, v.keys_enc);
+        convertShortIntArrayToByteArray(ciphertextInts, ciphertext);
+        
         System.out.print("Ciphertext:");
         for (byte b: ciphertext) {
             System.out.print(b + " ");
         }
         System.out.println();
         
-        ByteArrayOutputStream cleartextStream = new ByteArrayOutputStream();
-        v.decipher(new ByteArrayInputStream(ciphertext), cleartextStream);
-        byte [] cleartext_dec = cleartextStream.toByteArray();
+        //Decipher block again
+        idea_block(ciphertextInts, cleartextDecInts, v.keys_dec);
+        convertShortIntArrayToByteArray(cleartextDecInts, cleartextDec);
+
         System.out.print("Cleartext deciphered:");
-        for (byte c: cleartext_dec) {
+        for (byte c: cleartextDec) {
             System.out.print(c + " ");
         }
     }
