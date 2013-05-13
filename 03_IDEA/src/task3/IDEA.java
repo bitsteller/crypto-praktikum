@@ -52,16 +52,9 @@ public final class IDEA extends BlockCipher {
      * @return an array of 52 sequential subkeys
      *
      */
-    public static int[] idea_subkeys(BigInteger bI) {
-        // there should be no bits set after the 128th! this is basically key.length == 16
-        assert(bI.and(_128bits).equals(bI));
-
-        // allocate buffer space
+    public static int[] idea_subkeys(byte[] key) {
         int[] encryptKeys = new int[52];
-        byte[] key = bI.setBit(128).toByteArray();
 
-        // Encryption keys.  The first 8 key values come from the 16
-        // user-supplied key bytes.
         int k1;
 
         // Encryption keys.  The first 8 key values come from the 16
@@ -72,7 +65,6 @@ public final class IDEA extends BlockCipher {
 
         // Subsequent key values are the previous values rotated to the
         // left by 25 bits.
-
         for ( ; k1 < 52; ++k1 )
             encryptKeys[k1] =
                 ( ( encryptKeys[k1 - 8] << 9 ) |
@@ -91,7 +83,6 @@ public final class IDEA extends BlockCipher {
      */
     public static int[] idea_deckeys(int[] keys_enc) {
 
-        BigInteger addMod = BigInteger.valueOf(65536L);
         BigInteger multMod = BigInteger.valueOf(65537L);
 
         // allocate buffer space
@@ -106,8 +97,8 @@ public final class IDEA extends BlockCipher {
             KD(4) = 1/K(52)
         */
         buf.put(BigInteger.valueOf(keys_enc[48]).modInverse(multMod).intValue());
-        buf.put(-keys_enc[49] & 0xffff);
-        buf.put(-keys_enc[50] & 0xffff);
+        buf.put(-keys_enc[49]);
+        buf.put(-keys_enc[50]);
         buf.put(BigInteger.valueOf(keys_enc[51]).modInverse(multMod).intValue());
 
         /*
@@ -129,9 +120,14 @@ public final class IDEA extends BlockCipher {
                 KD(10) = 1/K(46)
             */
             buf.put(BigInteger.valueOf(keys_enc[42 -i]).modInverse(multMod).intValue());
-            buf.put(-keys_enc[44 -i] & 0xffff);
-            buf.put(-keys_enc[43 -i] & 0xffff);
-            buf.put(BigInteger.valueOf(keys_enc[47 -i]).modInverse(multMod).intValue());
+            if(i == 42) {
+                buf.put(-keys_enc[43 -i]);
+                buf.put(-keys_enc[44 -i]);
+            } else {
+                buf.put(-keys_enc[44 -i]);
+                buf.put(-keys_enc[43 -i]);
+            }
+            buf.put(BigInteger.valueOf(keys_enc[45 -i]).modInverse(multMod).intValue());
 
         }
 
@@ -152,7 +148,7 @@ public final class IDEA extends BlockCipher {
                                   (byte) 0xf2, (byte) 0x12, (byte) 0xfc, (byte) 0xfa, (byte) 0xaa, (byte) 0xff, (byte) 0x91, (byte) 0xff };
 
         assert(args.length == 1 && args[0].length() == 16);
-        int[] subkeys = IDEA.idea_subkeys(new BigInteger(key)); //args[0].getBytes()));
+        int[] subkeys = IDEA.idea_subkeys(key); //args[0].getBytes()));
         int[] deckeys = IDEA.idea_deckeys(subkeys); //args[0].getBytes()));
 
         for(int i = 0; i < subkeys.length; i++) {
@@ -398,7 +394,7 @@ public final class IDEA extends BlockCipher {
         byte[] key = new byte[] { (byte) 0x42, (byte) 0x61, (byte) 0xce, (byte) 0xd1, (byte) 0xff, (byte) 0x55, (byte) 0xff, (byte) 0x1d,
                                   (byte) 0xf2, (byte) 0x12, (byte) 0xfc, (byte) 0xfa, (byte) 0xaa, (byte) 0xff, (byte) 0x91, (byte) 0xff };
 
-        keys_enc = idea_subkeys(new BigInteger(key));
+        keys_enc = idea_subkeys(key);
         keys_dec = idea_deckeys(keys_enc);
 
     }
