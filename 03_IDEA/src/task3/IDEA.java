@@ -39,7 +39,7 @@ public final class IDEA extends BlockCipher {
     /// a bigint with first 128 bits set, needed for some bitwise trickery in idea_subkeys
     protected final static BigInteger _128bits = BigInteger.valueOf(0L).setBit(128).subtract(BigInteger.ONE);
 
-    int[] keys_enc, keys_dec;
+    public int[] keys_enc, keys_dec;
 
     /** generate subkeys.
      *
@@ -186,6 +186,10 @@ public final class IDEA extends BlockCipher {
     }
 
     /** One round of IDEA.
+     *
+     * Implements this algorithm:
+     * http://en.wikipedia.org/wiki/File:International_Data_Encryption_Algorithm_InfoBox_Diagram.svg
+     *
      * @param in 64 bits of input to encrypt. may be altered!
      * @param out 64 bits of output
      * @param key 96 bit key
@@ -215,6 +219,10 @@ public final class IDEA extends BlockCipher {
     }
 
     /** One half-round of IDEA.
+     *
+     * Implements this algorithm:
+     * http://en.wikipedia.org/wiki/File:International_Data_Encryption_Algorithm_InfoBox_Diagram_Output_Trans.png
+     *
      * @param in 64 bits of input to encrypt. may be altered!
      * @param out 64 bits of output
      * @param key 64 bit key
@@ -493,6 +501,22 @@ public final class IDEA extends BlockCipher {
         System.out.print("Cleartext deciphered:");
         for (byte c: cleartextDec) {
             System.out.print(c + " ");
+        }
+    }
+
+    public static void main_ideablock(String[] args) {
+        IDEA v = new IDEA();
+        v.makeKey();
+
+        int[] clear = new int[] { 1, 2, 3, 4 };
+        int[] cipher = new int[4];
+        int[] decipher = new int[4];
+
+        IDEA.idea_block(clear, cipher, v.keys_enc);
+        IDEA.idea_block(cipher, decipher, v.keys_dec);
+
+        for(int i = 0; i < clear.length; i++) {
+            System.out.println(clear[i] + " " + cipher[i] + " " + decipher[i]);
         }
     }
 
