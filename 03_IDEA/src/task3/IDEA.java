@@ -423,7 +423,7 @@ public final class IDEA extends BlockCipher {
 
     }
     
-    public static void main_old(String[] args) throws IOException { //main
+    public static void main(String[] args) throws IOException { //main
         FileInputStream input = new FileInputStream(args[1]);
         FileOutputStream output = new FileOutputStream(args[2]);
         IDEA v = new IDEA();
@@ -460,59 +460,22 @@ public final class IDEA extends BlockCipher {
             }
         }
     }
-    
-    public static void main(String[] args) { //main_testidea
-        IDEA v = new IDEA();
-        v.makeKey();
 
-        //encipher and decipher sample byte array
-        byte[] cleartext = new byte[] { (byte) 1, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0 };
-        int[] cleartextInts = new int[4];
-        byte[] ciphertext = new byte[8];
-        int[] ciphertextInts = new int[4];
-        byte[] cleartextDec = new byte[8];
-        int[] cleartextDecInts = new int[4];
-
-        System.out.print("Cleartext:");
-        for (byte b: cleartext) {
-            System.out.print(b + " ");
-        }
-        System.out.println();
-        
-        //Cipher one single cleartext block with IDEA (no CBC)
-        convertByteArrayToShortIntArray(cleartext,cleartextInts);
-        idea_block(cleartextInts, ciphertextInts, v.keys_enc);
-        convertShortIntArrayToByteArray(ciphertextInts, ciphertext);
-        
-        System.out.print("Ciphertext:");
-        for (byte b: ciphertext) {
-            System.out.print(b + " ");
-        }
-        System.out.println();
-        
-        //Decipher block again
-        idea_block(ciphertextInts, cleartextDecInts, v.keys_dec);
-        convertShortIntArrayToByteArray(cleartextDecInts, cleartextDec);
-
-        System.out.print("Cleartext deciphered:");
-        for (byte c: cleartextDec) {
-            System.out.print(c + " ");
-        }
-    }
-
-    public static void main_ideablock(String[] args) {
+    public static void main_testidea(String[] args) {
         IDEA v = new IDEA();
         v.makeKey();
 
         int[] clear = new int[] { 1, 2, 3, 4 };
-        int[] cipher = new int[4];
+        int[] cipher1 = new int[4];
+        int[] cipher2 = new int[4];
         int[] decipher = new int[4];
 
-        IDEA.idea_block(clear, cipher, v.keys_enc);
-        IDEA.idea_block(cipher, decipher, v.keys_dec);
+        IDEA.idea_block(clear, cipher1, v.keys_enc);
+        System.arraycopy(cipher1, 0, cipher2, 0, 4);
+        IDEA.idea_block(cipher2, decipher, v.keys_dec);
 
         for(int i = 0; i < clear.length; i++) {
-            System.out.println(clear[i] + " " + cipher[i] + " " + decipher[i]);
+            System.out.println(String.format("%04x %04x", cipher1[i], decipher[i]));
         }
     }
 
