@@ -38,6 +38,7 @@ public final class IDEA extends BlockCipher {
 
     /// a bigint with first 128 bits set, needed for some bitwise trickery in idea_subkeys
     protected final static BigInteger _128bits = BigInteger.valueOf(0L).setBit(128).subtract(BigInteger.ONE);
+    protected final static BigInteger multMod = BigInteger.valueOf(65537L);
 
     public int[] keys_enc, keys_dec;
 
@@ -57,14 +58,10 @@ public final class IDEA extends BlockCipher {
 
         int k1;
 
-        // Encryption keys.  The first 8 key values come from the 16
-        // user-supplied key bytes.
         for ( k1 = 0; k1 < 8; ++k1 )
             encryptKeys[k1] =
                 ( ( key[2 * k1] & 0xff ) << 8 ) | ( key[ 2 * k1 +1] & 0xff );
 
-        // Subsequent key values are the previous values rotated to the
-        // left by 25 bits.
         for ( ; k1 < 52; ++k1 )
             encryptKeys[k1] =
                 ( ( encryptKeys[k1 - 8] << 9 ) |
@@ -76,14 +73,13 @@ public final class IDEA extends BlockCipher {
     /** generate decryption keys.
      *
      * implementation concept: http://www.quadibloc.com/crypto/co040302.htm
+     * INFO AT LINK NOT EVEN CORRECT for the last four keys
      *
      * @param keys_enc 52 subkeys to generate decryption keys for
      * @return an array of 52 sequential decryption subkeys
      *
      */
     public static int[] idea_deckeys(int[] keys_enc) {
-
-        BigInteger multMod = BigInteger.valueOf(65537L);
 
         // allocate buffer space
         IntBuffer buf = IntBuffer.allocate(52);
@@ -179,6 +175,9 @@ public final class IDEA extends BlockCipher {
         // 1 idea half-round
         idea_halfround(in, out, subkeys, 48);
 
+        for(int i = 0; i < out.length; i++)
+            out[i] &= 0xffff;
+
     }
 
     /** One round of IDEA.
@@ -195,23 +194,31 @@ public final class IDEA extends BlockCipher {
         assert(key.length >= key_offset +6);
 
         // first layer
-        out[0] = in[0] * key[key_offset+0] & 0xffff;
-        out[1] = in[1] + key[key_offset+1] & 0xffff;
-        out[2] = in[2] + key[key_offset+2] & 0xffff;
-        out[3] = in[3] * key[key_offset+3] & 0xffff;
+        out[0] = mul(in[0], key[key_offset+0]);
+        out[1] = in[1] + key[key_offset+1];
+        out[2] = in[2] + key[key_offset+2];
+        out[3] = mul(in[3], key[key_offset+3]);
 
         // intermediate values
-        in[0] =  (out[0] ^ out[2]) * key[key_offset+4] & 0xffff;
-        in[1] =  (out[1] ^ out[3]) + in[0] & 0xffff;
-        in[2] = in[1] + key[key_offset+5] & 0xffff;
-        in[3] = in[0] + in[2] & 0xffff;
+        in[0] = mul(out[0] ^ out[2], key[key_offset+4]);
+        in[1] = (out[1] ^ out[3]) + in[0];
+        in[2] = mul(in[1], key[key_offset+5]);
+        in[3] = in[0] + in[2];
 
         // bottom xor-layer
         out[0] = out[0] ^ in[2];
+        int SDKFJSDF = out[1];
         out[1] = out[2] ^ in[2];
-        out[2] = out[1] ^ in[3];
+        out[2] = SDKFJSDF ^ in[3];
         out[3] = out[3] ^ in[3];
 
+    }
+
+    /** Multiplication modulo 65537L.
+     *
+     */
+    public static int mul(int a, int b) {
+        return BigInteger.valueOf(a & 0xffff).multiply(BigInteger.valueOf(b & 0xffff)).mod(multMod).intValue();
     }
 
     /** One half-round of IDEA.
@@ -227,19 +234,10 @@ public final class IDEA extends BlockCipher {
         assert(in.length == 4 && out.length == 4);
         assert(key.length >= key_offset +4);
 
-        // we use our time here to make sure with some assertions that the
-        // down-casting does not shave off any of our precision
-        out[0] = in[0] * key[key_offset+0] & 0xffff;
-        assert(out[0] == (in[0] * key[key_offset+0] & 0xffff));
-
-        out[1] = in[2] + key[key_offset+1] & 0xffff;
-        assert(out[1] == (in[2] + key[key_offset+1] & 0xffff));
-
-        out[2] = in[1] + key[key_offset+2] & 0xffff;
-        assert(out[2] == (in[1] + key[key_offset+2] & 0xffff));
-
-        out[3] = in[3] * key[key_offset+3] & 0xffff;
-        assert(out[3] == (in[3] * key[key_offset+3] & 0xffff));
+        out[0] = mul(in[0], key[key_offset+0]);
+        out[1] = in[2] + key[key_offset+1];
+        out[2] = in[1] + key[key_offset+2];
+        out[3] = mul(in[3], key[key_offset+3]);
 
     }
     
