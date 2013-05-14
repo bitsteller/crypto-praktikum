@@ -61,7 +61,7 @@ public final class IDEA extends BlockCipher {
         // user-supplied key bytes.
         for ( k1 = 0; k1 < 8; ++k1 )
             encryptKeys[k1] =
-                ( ( key[2 * k1 +1] & 0xff ) << 8 ) | ( key[ 2 * k1 +2] & 0xff );
+                ( ( key[2 * k1] & 0xff ) << 8 ) | ( key[ 2 * k1 +1] & 0xff );
 
         // Subsequent key values are the previous values rotated to the
         // left by 25 bits.
