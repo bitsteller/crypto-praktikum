@@ -303,6 +303,7 @@ public final class IDEA extends BlockCipher {
 
                 // convert to ints of 16 bits each
                 convertByteArrayToShortIntArray(block_byte, block_cipher);
+                System.arraycopy(block_cipher, 0, block_tmp, 0, block_last.length);
 
                 // encrypt block with IDEA
                 idea_block(block_cipher, block_int, this.keys_dec);
@@ -310,11 +311,12 @@ public final class IDEA extends BlockCipher {
                 
                 // CBC: xor with last block
                 for (int i = 0; i < 4; i++) {
-                    block_tmp[i] = block_int[i] ^ block_last[i];
+                    block_int[i] ^= block_last[i];
                 }
-                System.arraycopy(block_cipher, 0, block_last, 0, block_last.length);
-                
-                convertShortIntArrayToByteArray(block_tmp, block_byte);
+
+                System.arraycopy(block_tmp, 0, block_last, 0, block_last.length);
+
+                convertShortIntArrayToByteArray(block_int, block_byte);
 
                 // write to output
                 cleartext.write(block_byte);
