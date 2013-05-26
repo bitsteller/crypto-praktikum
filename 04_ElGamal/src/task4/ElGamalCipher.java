@@ -28,12 +28,12 @@ public final class ElGamalCipher extends BlockCipher {
 
     public BigInteger decipherBlock(BigInteger cipher) {
         //split cipher back into y and b parts
-        BigInteger y = cipher.mod(q);
+        BigInteger yb = cipher.mod(q);
         BigInteger b = cipher.divide(q);
-        
+
         //decipher message
-        BigInteger exp = q.min(ONE).min(x);
-        BigInteger clear = b.multiply(y.modPow(exp, q)).mod(q);
+        BigInteger exp = q.subtract(ONE).subtract(x);
+        BigInteger clear = b.multiply(yb.modPow(exp, q)).mod(q);
         return clear;
     }
     
@@ -61,9 +61,10 @@ public final class ElGamalCipher extends BlockCipher {
     }
 
     public BigInteger encipherBlock(BigInteger clear) {
-        BigInteger y = g.modPow(x, q);
-        BigInteger b = clear.multiply(y.modPow(x, q)).mod(q);
-        return y.add(b.multiply(q));
+        BigInteger xb = BigIntegerUtil.randomBetween(TWO, q.subtract(TWO));
+        BigInteger yb = g.modPow(xb, q);
+        BigInteger b = clear.multiply(y.modPow(xb, q)).mod(q);
+        return yb.add(b.multiply(q));
     }
 
     /**
@@ -93,7 +94,7 @@ public final class ElGamalCipher extends BlockCipher {
 
     // did I do this public private thing right? :)
     // public key part
-    public BigInteger g, q, h, y;
+    public BigInteger g, q, y;
     // private key part
     private BigInteger x;
 
