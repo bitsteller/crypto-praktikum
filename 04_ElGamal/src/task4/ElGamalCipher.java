@@ -125,7 +125,7 @@ public final class ElGamalCipher extends BlockCipher {
             // choose 2 < g < q, we should have a 50% probability of hitting a generating number here.
             g = BigIntegerUtil.randomBetween(THREE, qMinusOne);
             // check if the required criteria for a generator of G applies
-        } while(!g.modPow(qMinusOneDivTwo, q).equals(NONE));
+        } while(!g.modPow(q, qMinusOneDivTwo).equals(NONE));
 
         // choose random x
         x = BigIntegerUtil.randomBetween(TWO, q.subtract(TWO));
