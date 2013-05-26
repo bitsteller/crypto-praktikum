@@ -43,6 +43,12 @@ public final class ElGamalCipher extends BlockCipher {
 
     }
 
+    public BigInteger encipher(BigInteger clear) {
+        BigInteger y = g.modPow(x, q);
+        BigInteger b = clear.multiply(y.modPow(x, q)).mod(q);
+        return y.add(b.multiply(q));
+    }
+    
     /**
      * Verschlüsselt den durch den FileInputStream <code>cleartext</code>
      * gegebenen Klartext und schreibt den Chiffretext in den FileOutputStream
@@ -57,7 +63,15 @@ public final class ElGamalCipher extends BlockCipher {
      * Der FileOutputStream, in den der Chiffretext geschrieben werden soll.
      */
     public void encipher(FileInputStream cleartext, FileOutputStream ciphertext) {
-
+        int bitLen = q.bitLength();
+        int blockLen = (bitLen - 1) / 8;
+        
+        BigInteger clear = readClear(cleartext,blockLen);
+        
+        while (clear != null ) {
+            writeCipher(ciphertext,encipher(clear));
+            clear = readClear(cleartext,blockLen);
+        }
     }
 
     // did I do this public private thing right? :)
