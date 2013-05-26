@@ -145,13 +145,13 @@ public final class ElGamalSignature extends Signature {
     }
 
     public BigInteger signBlock(BigInteger M) {
-        // Algorithm 7.5
+        // Algorithm 7.8
         BigInteger k;
         do {
             k = BigIntegerUtil.randomBetween(TWO, q.subtract(TWO));
         } while(!k.gcd(q.subtract(ONE)).equals(ONE));
         BigInteger r = g.modPow(k, q);
-        BigInteger b = M.subtract(x).multiply(r);
+        BigInteger b = M.subtract(x.multiply(r));
         BigInteger s = b.multiply(k.modInverse(q.subtract(ONE))).mod(q.subtract(ONE));
         return r.add(s.multiply(q));
     }
