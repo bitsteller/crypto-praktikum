@@ -98,6 +98,7 @@ public final class ElGamalCipher extends BlockCipher {
     private BigInteger x;
 
     public static final BigInteger ONE = BigInteger.ONE;
+    public static final BigInteger NONE = BigInteger.ONE.negate();
     public static final BigInteger TWO = BigInteger.valueOf(2L);
     public static final BigInteger THREE = BigInteger.valueOf(3L);
 
@@ -118,13 +119,13 @@ public final class ElGamalCipher extends BlockCipher {
         } while(q.isProbablePrime(42));
 
         // same algorithm to find a generator
-        BigInteger pMinusOne = q.subtract(ONE);
-        BigInteger pMinusOneDivTwo = pMinusOne.divide(TWO);
+        BigInteger qMinusOne = q.subtract(ONE);
+        BigInteger qMinusOneDivTwo = qMinusOne.divide(TWO);
         do {
             // choose 2 < g < q, we should have a 50% probability of hitting a generating number here.
-            g = BigIntegerUtil.randomBetween(THREE, q.subtract(ONE));
+            g = BigIntegerUtil.randomBetween(THREE, qMinusOne);
             // check if the required criteria for a generator of G applies
-        } while(!g.modPow(pMinusOneDivTwo, q).equals(pMinusOne));
+        } while(!g.modPow(qMinusOneDivTwo, q).equals(NONE));
 
         // choose random x
         x = BigIntegerUtil.randomBetween(TWO, q.subtract(TWO));
