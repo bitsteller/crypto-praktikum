@@ -149,7 +149,7 @@ public final class ElGamalSignature extends Signature {
         BigInteger k;
         do {
             k = BigIntegerUtil.randomBetween(TWO, q.subtract(TWO));
-        } while(k.gcd(q).equals(ONE));
+        } while(!k.gcd(q.subtract(ONE)).equals(ONE));
         BigInteger r = g.modPow(k, q);
         BigInteger b = M.subtract(x).multiply(r);
         BigInteger s = b.multiply(k.modInverse(q.subtract(ONE))).mod(q.subtract(ONE));
@@ -179,6 +179,12 @@ public final class ElGamalSignature extends Signature {
             writeCipher(ciphertext, signBlock(clear));
             clear = readClear(cleartext, blockLen);
         }
+        try {
+            ciphertext.close();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     public boolean verifyBlock(BigInteger clear, BigInteger cipher) {
@@ -187,7 +193,7 @@ public final class ElGamalSignature extends Signature {
         BigInteger s = cipher.divide(q);
 
         //decipher message
-        BigInteger first = y.modPow(r, q).multiply(r.modPow(s, q));
+        BigInteger first = y.modPow(r, q).multiply(r.modPow(s, q)).mod(q);
         BigInteger second = g.modPow(clear, q);
         return first.equals(second);
     }
@@ -207,23 +213,35 @@ public final class ElGamalSignature extends Signature {
      * überprüft werden soll.
      */
     public void verify(FileInputStream ciphertext, FileInputStream cleartext) {
-
+        int bitLen = q.bitLength();
+        int blockLen = (bitLen - 1) / 8;
+        
         BigInteger cipher = readCipher(ciphertext);
-        BigInteger clear = readCipher(cleartext);
+        BigInteger clear = readClear(cleartext, blockLen);
 
         //decipher blockwise
         while (cipher != null ) {
 
-            if(verifyBlock(clear, cipher)) {
+            if(!verifyBlock(clear, cipher)) {
                 System.out.println("Wrong signature!");
                 return;
             }
 
             cipher = readCipher(ciphertext);
-            clear = readCipher(cleartext);
+            clear = readClear(cleartext, blockLen);
         }
 
         System.out.println("Correct signature!");
+    }
+    
+    
+    public static void main(String[]args) {
+        ElGamalSignature eg = new ElGamalSignature();
+        eg.makeKey();
+        
+        BigInteger clear = new BigInteger("1");
+        BigInteger cipher = eg.signBlock(clear);
+        assert(eg.verifyBlock(clear, cipher));
     }
 
 }
