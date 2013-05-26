@@ -114,11 +114,12 @@ public final class ElGamalCipher extends BlockCipher {
         // trivial algorithm: get a 512 bit random number, check if it's a prime. rinse and repeat.
         do {
             BigInteger p = new BigInteger(512, rand); // p = random 512 bit number
-            q = p.multiply(TWO).subtract(ONE); // q = 2p-1
+            q = p.multiply(TWO).add(ONE); // q = 2p+1
         } while(q.isProbablePrime(42));
 
         // same algorithm to find a generator
         BigInteger qMinusOne = q.subtract(ONE);
+        // this is p. don't ask.
         BigInteger qMinusOneDivTwo = qMinusOne.divide(TWO);
         do {
             // choose 2 < g < q, we should have a 50% probability of hitting a generating number here.
