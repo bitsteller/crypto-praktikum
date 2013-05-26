@@ -11,13 +11,12 @@
 
 package task4;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.math.BigInteger;
+import java.io.*;
+import java.math.*;
+import java.util.*;
 
-import de.tubs.cs.iti.jcrypt.chiffre.BlockCipher;
+import de.tubs.cs.iti.jcrypt.chiffre.*;
+import de.tubs.cs.iti.jcrypt.chiffre.BigIntegerUtil;
 
 /**
  * Dummy-Klasse für das ElGamal-Public-Key-Verschlüsselungsverfahren.
@@ -63,9 +62,13 @@ public final class ElGamalCipher extends BlockCipher {
 
     // did I do this public private thing right? :)
     // public key part
-    public BigInteger g, p, q, h;
+    public BigInteger g, q, h, y;
     // private key part
     private BigInteger x;
+
+    public static final BigInteger ONE = BigInteger.ONE;
+    public static final BigInteger TWO = BigInteger.valueOf(2L);
+    public static final BigInteger THREE = BigInteger.valueOf(3L);
 
     /**
      * Erzeugt einen neuen Schlüssel.
@@ -74,7 +77,30 @@ public final class ElGamalCipher extends BlockCipher {
      * @see #writeKey writeKey
      */
     public void makeKey() {
-        System.out.println("Dummy für die Schlüsselerzeugung.");
+
+        Random rand = new Random();
+
+        // trivial algorithm: get a 512 bit random number, check if it's a prime. rinse and repeat.
+        do {
+            BigInteger p = new BigInteger(512, rand); // p = random 512 bit number
+            q = p.multiply(TWO).subtract(ONE); // q = 2p-1
+        } while(q.isProbablePrime(42));
+
+        // same algorithm to find a generator
+        BigInteger pMinusOne = q.subtract(ONE);
+        BigInteger pMinusOneDivTwo = pMinusOne.divide(TWO);
+        do {
+            // choose 2 < g < q, we should have a 50% probability of hitting a generating number here.
+            g = BigIntegerUtil.randomBetween(THREE, q.subtract(ONE));
+            // check if the required criteria for a generator of G applies
+        } while(!g.modPow(pMinusOneDivTwo, q).equals(pMinusOne));
+
+        // choose random x
+        x = BigIntegerUtil.randomBetween(TWO, q.subtract(TWO));
+
+        // also, y.
+        y = g.modPow(x, q);
+
     }
 
     /**
