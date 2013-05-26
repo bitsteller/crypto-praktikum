@@ -109,7 +109,6 @@ public final class ElGamalCipher extends BlockCipher {
      * @see #writeKey writeKey
      */
     public void makeKey() {
-
         Random rand = new Random();
 
         // trivial algorithm: get a 512 bit random number, check if it's a prime. rinse and repeat.
