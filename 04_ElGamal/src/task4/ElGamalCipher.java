@@ -26,6 +26,17 @@ import de.tubs.cs.iti.jcrypt.chiffre.BigIntegerUtil;
  */
 public final class ElGamalCipher extends BlockCipher {
 
+    public BigInteger decipherBlock(BigInteger cipher) {
+        //split cipher back into y and b parts
+        BigInteger y = cipher.mod(q);
+        BigInteger b = cipher.divide(q);
+        
+        //decipher message
+        BigInteger exp = q.min(ONE).min(x);
+        BigInteger clear = b.multiply(y.modPow(exp, q)).mod(q);
+        return clear;
+    }
+    
     /**
      * Entschlüsselt den durch den FileInputStream <code>ciphertext</code>
      * gegebenen Chiffretext und schreibt den Klartext in den FileOutputStream
@@ -40,7 +51,13 @@ public final class ElGamalCipher extends BlockCipher {
      * Der FileOutputStream, in den der Klartext geschrieben werden soll.
      */
     public void decipher(FileInputStream ciphertext, FileOutputStream cleartext) {
-
+        BigInteger cipher = readCipher(ciphertext);
+        
+        //decipher blockwise
+        while (cipher != null ) {
+            writeClear(cleartext, decipherBlock(cipher));
+            cipher = readCipher(ciphertext);
+        }
     }
 
     public BigInteger encipher(BigInteger clear) {
