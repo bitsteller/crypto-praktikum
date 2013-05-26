@@ -112,7 +112,31 @@ public final class ElGamalCipher extends BlockCipher {
      * @see #writeKey writeKey
      */
     public void readKey(BufferedReader key) {
+        try {
 
+            {
+                String in_public = key.readLine();
+                BufferedReader in = new BufferedReader(new FileReader(in_public));
+
+                q = new BigInteger(in.readLine());
+                g = new BigInteger(in.readLine());
+                y = new BigInteger(in.readLine());
+
+            }
+
+            {
+                String in_private = key.readLine();
+                BufferedReader in = new BufferedReader(new FileReader(in_private));
+
+                x = new BigInteger(in.readLine());
+            }
+
+            key.close();
+        } catch (Exception e) {
+            // let's try to exit graceffuuuuOHSHIKILLITWITHFIREOMGOMGOMG
+            e.printStackTrace();
+            System.exit(1);
+        }
     }
 
     /**
@@ -124,6 +148,31 @@ public final class ElGamalCipher extends BlockCipher {
      * @see #readKey readKey
      */
     public void writeKey(BufferedWriter key) {
+        try {
 
+            String out_public = "<Ihr Accountname>.secr.public";
+            String out_private = "<Ihr Accountname>.secr.private";
+
+            {
+                BufferedWriter out = new BufferedWriter(new FileWriter(new File(out_public)));
+                out.write(q.toString()); out.newLine();
+                out.write(g.toString()); out.newLine();
+                out.write(y.toString()); out.newLine();
+            }
+
+            {
+                BufferedWriter out = new BufferedWriter(new FileWriter(new File(out_private)));
+                out.write(x.toString()); out.newLine();
+            }
+
+            key.write(out_public); key.newLine();
+            key.write(out_private); key.newLine();
+            key.close();
+        } catch(Exception e) {
+            // let's try to exit graceffuuuuOHSHIKILLITWITHFIREOMGOMGOMG
+            e.printStackTrace();
+            System.exit(1);
+        }
     }
+
 }
