@@ -109,23 +109,23 @@ public final class ElGamalCipher extends BlockCipher {
      * @see #writeKey writeKey
      */
     public void makeKey() {
-
         Random rand = new Random();
 
         // trivial algorithm: get a 512 bit random number, check if it's a prime. rinse and repeat.
         do {
-            BigInteger p = new BigInteger(512, rand); // p = random 512 bit number
-            q = p.multiply(TWO).subtract(ONE); // q = 2p-1
-        } while(q.isProbablePrime(42));
+            BigInteger p = new BigInteger(511, rand); // p = random 512 bit number
+            q = p.multiply(TWO).add(ONE); // q = 2p+1
+        } while(!q.isProbablePrime(42));
 
         // same algorithm to find a generator
         BigInteger qMinusOne = q.subtract(ONE);
+        // this is p. don't ask.
         BigInteger qMinusOneDivTwo = qMinusOne.divide(TWO);
         do {
             // choose 2 < g < q, we should have a 50% probability of hitting a generating number here.
-            g = BigIntegerUtil.randomBetween(THREE, qMinusOne);
+            g = BigIntegerUtil.randomBetween(THREE, qMinusOne, rand);
             // check if the required criteria for a generator of G applies
-        } while(!g.modPow(qMinusOneDivTwo, q).equals(NONE));
+        } while(!g.modPow(qMinusOneDivTwo, q).equals(qMinusOne));
 
         // choose random x
         x = BigIntegerUtil.randomBetween(TWO, q.subtract(TWO));
@@ -190,11 +190,13 @@ public final class ElGamalCipher extends BlockCipher {
                 out.write(q.toString()); out.newLine();
                 out.write(g.toString()); out.newLine();
                 out.write(y.toString()); out.newLine();
+                out.close();
             }
 
             {
                 BufferedWriter out = new BufferedWriter(new FileWriter(new File(out_private)));
                 out.write(x.toString()); out.newLine();
+                out.close();
             }
 
             key.write(out_public); key.newLine();
