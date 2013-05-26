@@ -85,9 +85,11 @@ public final class ElGamalCipher extends BlockCipher {
         int blockLen = (bitLen - 1) / 8;
 
         BigInteger clear = readClear(cleartext,blockLen);
-
+        System.out.println(clear);
         while (clear != null ) {
-            writeCipher(ciphertext, encipherBlock(clear));
+            BigInteger brot = encipherBlock(clear);
+            writeCipher(ciphertext, brot);
+            assert(decipherBlock(brot).equals(clear));
             clear = readClear(cleartext, blockLen);
         }
     }
@@ -208,6 +210,17 @@ public final class ElGamalCipher extends BlockCipher {
             e.printStackTrace();
             System.exit(1);
         }
+    }
+    
+    
+    public static void main_testelgamalblock(String[]args) {
+        ElGamalCipher eg = new ElGamalCipher();
+        eg.makeKey();
+        
+        BigInteger clear = new BigInteger("424242545242542553609813578341807415807245780");
+        BigInteger cipher = eg.encipherBlock(clear);
+        BigInteger clear_dec = eg.decipherBlock(cipher);
+        assert(clear == clear_dec);
     }
 
 }
