@@ -16,7 +16,6 @@ import java.math.*;
 import java.util.*;
 
 import de.tubs.cs.iti.jcrypt.chiffre.*;
-import de.tubs.cs.iti.jcrypt.chiffre.BigIntegerUtil;
 
 /**
  * Dummy-Klasse für das ElGamal-Public-Key-Verschlüsselungsverfahren.

@@ -11,12 +11,11 @@
 
 package task4;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.*;
+import java.math.*;
+import java.util.*;
 
-import de.tubs.cs.iti.jcrypt.chiffre.Signature;
+import de.tubs.cs.iti.jcrypt.chiffre.*;
 
 /**
  * Dummy-Klasse für das ElGamal-Public-Key-Signaturverfahren.
@@ -26,28 +25,123 @@ import de.tubs.cs.iti.jcrypt.chiffre.Signature;
  */
 public final class ElGamalSignature extends Signature {
 
-  /**
-   * Erzeugt einen neuen Schlüssel.
-   * 
-   * @see #readKey readKey
-   * @see #writeKey writeKey
-   */
-  public void makeKey() {
+    // did I do this public private thing right? :)
+    // public key part
+    public BigInteger g, q, y;
+    // private key part
+    private BigInteger x;
 
-    System.out.println("Dummy für die Schlüsselerzeugung.");
-  }
+    public static final BigInteger ONE = BigInteger.ONE;
+    public static final BigInteger NONE = BigInteger.ONE.negate();
+    public static final BigInteger TWO = BigInteger.valueOf(2L);
+    public static final BigInteger THREE = BigInteger.valueOf(3L);
 
-  /**
-   * Liest den Schlüssel mit dem Reader <code>key</code>.
-   * 
-   * @param key
-   * Der Reader, der aus der Schlüsseldatei liest.
-   * @see #makeKey makeKey
-   * @see #writeKey writeKey
-   */
-  public void readKey(BufferedReader key) {
+    /**
+     * Erzeugt einen neuen Schlüssel.
+     * 
+     * @see #readKey readKey
+     * @see #writeKey writeKey
+     */
+    public void makeKey() {
+        Random rand = new Random();
 
-  }
+        // trivial algorithm: get a 512 bit random number, check if it's a prime. rinse and repeat.
+        do {
+            BigInteger p = new BigInteger(511, rand); // p = random 512 bit number
+            q = p.multiply(TWO).add(ONE); // q = 2p+1
+        } while(!q.isProbablePrime(42));
+
+        // same algorithm to find a generator
+        BigInteger qMinusOne = q.subtract(ONE);
+        // this is p. don't ask.
+        BigInteger qMinusOneDivTwo = qMinusOne.divide(TWO);
+        do {
+            // choose 2 < g < q, we should have a 50% probability of hitting a generating number here.
+            g = BigIntegerUtil.randomBetween(THREE, qMinusOne, rand);
+            // check if the required criteria for a generator of G applies
+        } while(!g.modPow(qMinusOneDivTwo, q).equals(qMinusOne));
+
+        // choose random x
+        x = BigIntegerUtil.randomBetween(TWO, q.subtract(TWO));
+
+        // also, y.
+        y = g.modPow(x, q);
+
+    }
+
+    /**
+     * Liest den Schlüssel mit dem Reader <code>key</code>.
+     * 
+     * @param key
+     * Der Reader, der aus der Schlüsseldatei liest.
+     * @see #makeKey makeKey
+     * @see #writeKey writeKey
+     */
+    public void readKey(BufferedReader key) {
+        try {
+
+            {
+                String in_public = key.readLine();
+                BufferedReader in = new BufferedReader(new FileReader(in_public));
+
+                q = new BigInteger(in.readLine());
+                g = new BigInteger(in.readLine());
+                y = new BigInteger(in.readLine());
+
+            }
+
+            {
+                String in_private = key.readLine();
+                BufferedReader in = new BufferedReader(new FileReader(in_private));
+
+                x = new BigInteger(in.readLine());
+            }
+
+            key.close();
+        } catch (Exception e) {
+            // let's try to exit graceffuuuuOHSHIKILLITWITHFIREOMGOMGOMG
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
+
+    /**
+     * Schreibt den Schlüssel mit dem Writer <code>key</code>.
+     * 
+     * @param key
+     * Der Writer, der in die Schlüsseldatei schreibt.
+     * @see #makeKey makeKey
+     * @see #readKey readKey
+     */
+    public void writeKey(BufferedWriter key) {
+        try {
+
+            String out_public = "<Ihr Accountname>.secr.public";
+            String out_private = "<Ihr Accountname>.secr.private";
+
+            {
+                BufferedWriter out = new BufferedWriter(new FileWriter(new File(out_public)));
+                out.write(q.toString()); out.newLine();
+                out.write(g.toString()); out.newLine();
+                out.write(y.toString()); out.newLine();
+                out.close();
+            }
+
+            {
+                BufferedWriter out = new BufferedWriter(new FileWriter(new File(out_private)));
+                out.write(x.toString()); out.newLine();
+                out.close();
+            }
+
+            key.write(out_public); key.newLine();
+            key.write(out_private); key.newLine();
+            key.close();
+        } catch(Exception e) {
+            // let's try to exit graceffuuuuOHSHIKILLITWITHFIREOMGOMGOMG
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
 
   /**
    * Signiert den durch den FileInputStream <code>cleartext</code> gegebenen
@@ -84,15 +178,4 @@ public final class ElGamalSignature extends Signature {
 
   }
 
-  /**
-   * Schreibt den Schlüssel mit dem Writer <code>key</code>.
-   * 
-   * @param key
-   * Der Writer, der in die Schlüsseldatei schreibt.
-   * @see #makeKey makeKey
-   * @see #readKey readKey
-   */
-  public void writeKey(BufferedWriter key) {
-
-  }
 }
