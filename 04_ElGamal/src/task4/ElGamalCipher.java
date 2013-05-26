@@ -115,7 +115,7 @@ public final class ElGamalCipher extends BlockCipher {
         do {
             BigInteger p = new BigInteger(512, rand); // p = random 512 bit number
             q = p.multiply(TWO).add(ONE); // q = 2p+1
-        } while(q.isProbablePrime(42));
+        } while(!q.isProbablePrime(42));
 
         // same algorithm to find a generator
         BigInteger qMinusOne = q.subtract(ONE);
