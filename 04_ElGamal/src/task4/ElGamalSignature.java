@@ -31,6 +31,7 @@ public final class ElGamalSignature extends Signature {
     // private key part
     private BigInteger x;
 
+    public static final BigInteger ZERO = BigInteger.ZERO;
     public static final BigInteger ONE = BigInteger.ONE;
     public static final BigInteger NONE = BigInteger.ONE.negate();
     public static final BigInteger TWO = BigInteger.valueOf(2L);
@@ -143,39 +144,86 @@ public final class ElGamalSignature extends Signature {
         }
     }
 
-  /**
-   * Signiert den durch den FileInputStream <code>cleartext</code> gegebenen
-   * Klartext und schreibt die Signatur in den FileOutputStream
-   * <code>ciphertext</code>.
-   * <p>Das blockweise Lesen des Klartextes soll mit der Methode {@link
-   * #readClear readClear} durchgeführt werden, das blockweise Schreiben der
-   * Signatur mit der Methode {@link #writeCipher writeCipher}.</p>
-   * 
-   * @param cleartext
-   * Der FileInputStream, der den Klartext liefert.
-   * @param ciphertext
-   * Der FileOutputStream, in den die Signatur geschrieben werden soll.
-   */
-  public void sign(FileInputStream cleartext, FileOutputStream ciphertext) {
+    public BigInteger signBlock(BigInteger M) {
+        // Algorithm 7.5
+        BigInteger k;
+        do {
+            k = BigIntegerUtil.randomBetween(TWO, q.subtract(TWO));
+        } while(k.gcd(q).equals(ONE));
+        BigInteger r = g.modPow(k, q);
+        BigInteger b = M.subtract(x).multiply(r);
+        BigInteger s = b.multiply(k.modInverse(q.subtract(ONE))).mod(q.subtract(ONE));
+        return r.add(s.multiply(q));
+    }
 
-  }
+    /**
+     * Signiert den durch den FileInputStream <code>cleartext</code> gegebenen
+     * Klartext und schreibt die Signatur in den FileOutputStream
+     * <code>ciphertext</code>.
+     * <p>Das blockweise Lesen des Klartextes soll mit der Methode {@link
+     * #readClear readClear} durchgeführt werden, das blockweise Schreiben der
+     * Signatur mit der Methode {@link #writeCipher writeCipher}.</p>
+     * 
+     * @param cleartext
+     * Der FileInputStream, der den Klartext liefert.
+     * @param ciphertext
+     * Der FileOutputStream, in den die Signatur geschrieben werden soll.
+     */
+    public void sign(FileInputStream cleartext, FileOutputStream ciphertext) {
+        int bitLen = q.bitLength();
+        int blockLen = (bitLen - 1) / 8;
 
-  /**
-   * Überprüft die durch den FileInputStream <code>ciphertext</code> gegebene
-   * Signatur auf den vom FileInputStream <code>cleartext</code> gelieferten
-   * Klartext.
-   * <p>Das blockweise Lesen der Signatur soll mit der Methode {@link
-   * #readCipher readCipher} durchgeführt werden, das blockweise Lesen des
-   * Klartextes mit der Methode {@link #readClear readClear}.</p>
-   *
-   * @param ciphertext
-   * Der FileInputStream, der die zu prüfende Signatur liefert.
-   * @param cleartext
-   * Der FileInputStream, der den Klartext liefert, auf den die Signatur
-   * überprüft werden soll.
-   */
-  public void verify(FileInputStream ciphertext, FileInputStream cleartext) {
+        BigInteger clear = readClear(cleartext,blockLen);
+        System.out.println(clear);
+        while (clear != null ) {
+            writeCipher(ciphertext, signBlock(clear));
+            clear = readClear(cleartext, blockLen);
+        }
+    }
 
-  }
+    public boolean verifyBlock(BigInteger clear, BigInteger cipher) {
+        //split cipher back into r and s parts
+        BigInteger r = cipher.mod(q);
+        BigInteger s = cipher.divide(q);
+
+        //decipher message
+        BigInteger first = y.modPow(r, q).multiply(r.modPow(s, q));
+        BigInteger second = g.modPow(clear, q);
+        return first.equals(second);
+    }
+
+    /**
+     * Überprüft die durch den FileInputStream <code>ciphertext</code> gegebene
+     * Signatur auf den vom FileInputStream <code>cleartext</code> gelieferten
+     * Klartext.
+     * <p>Das blockweise Lesen der Signatur soll mit der Methode {@link
+     * #readCipher readCipher} durchgeführt werden, das blockweise Lesen des
+     * Klartextes mit der Methode {@link #readClear readClear}.</p>
+     *
+     * @param ciphertext
+     * Der FileInputStream, der die zu prüfende Signatur liefert.
+     * @param cleartext
+     * Der FileInputStream, der den Klartext liefert, auf den die Signatur
+     * überprüft werden soll.
+     */
+    public void verify(FileInputStream ciphertext, FileInputStream cleartext) {
+
+        BigInteger cipher = readCipher(ciphertext);
+        BigInteger clear = readCipher(cleartext);
+
+        //decipher blockwise
+        while (cipher != null ) {
+
+            if(verifyBlock(clear, cipher)) {
+                System.out.println("Wrong signature!");
+                return;
+            }
+
+            cipher = readCipher(ciphertext);
+            clear = readCipher(cleartext);
+        }
+
+        System.out.println("Correct signature!");
+    }
 
 }
