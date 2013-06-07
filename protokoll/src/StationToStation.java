@@ -10,8 +10,6 @@ import java.util.*;
 import java.io.*;
 import java.security.MessageDigest;
 
-import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream;
-
 /**
  *
  */
@@ -297,51 +295,66 @@ public final class StationToStation implements Protocol
         return x;
     }
 
-    public BigInteger crypt(BigInteger key, BigInteger msg) {
-        byte[] msg_bytes = msg.toByteArray();
-        ByteOutputStream  cipherStream = new ByteOutputStream();
-        IDEA idea = new IDEA(key);
-        
-        int offset = 0;
-        while (offset < msg_bytes.length) {
-            byte[] bytes_block = new byte[8];
-            //padding with zero if less than 8 bytes
-            for (int i = 0; i < 8; i++) {
-                if (offset+i < msg_bytes.length) {
-                    bytes_block[i] = msg_bytes[offset+i];
-                }
-                else {
-                    bytes_block[i] = (byte) 0;
-                }
-            }
-            byte[] cipher_block = new byte[8];
-            IDEA.idea_block(bytes_block, cipher_block, idea.keys_enc);
-            cipherStream.write(cipher_block);
-            offset +=8;
-        }
-        
-        return new BigInteger(cipherStream.getBytes());
-        //return msg;
+    public static void main_testcrypt(String[] args) {
+        BigInteger K = new BigInteger(128, 50, new Random());
+        BigInteger blah = new BigInteger(128, 0, new Random());
+        System.out.println(blah.toString());
+        BigInteger tmp;
+
+        tmp = crypt(K, blah);
+        System.out.println(tmp.toString());
+
+        tmp = decrypt(K, tmp);
+        System.out.println(tmp.toString());
+
     }
-    public BigInteger decrypt(BigInteger key, BigInteger msg) {
+
+    public static BigInteger crypt(BigInteger key, BigInteger msg) {
         byte[] msg_bytes = msg.toByteArray();
-        ByteOutputStream  clearStream = new ByteOutputStream();
+        ByteArrayOutputStream  cipherStream = new ByteArrayOutputStream();
         IDEA idea = new IDEA(key);
-        
+
         int offset = 0;
+        byte[] bytes_block = new byte[8];
+        byte[] cipher_block = new byte[8];
+
+        if(msg_bytes.length % 8 > 0) {
+            Arrays.fill(bytes_block, 0, 8, (byte) 0 );
+            System.arraycopy(msg_bytes, 0, bytes_block, 8 -(msg_bytes.length%8), msg_bytes.length%8);
+            IDEA.idea_block(bytes_block, cipher_block, idea.keys_enc);
+            cipherStream.write(cipher_block, 0, 8);
+            offset += msg_bytes.length % 8;
+        }
         while (offset < msg_bytes.length) {
-            assert(offset+7 < msg_bytes.length); //blocks must have 8 bytes each
-            byte[] bytes_block =  Arrays.copyOfRange(msg_bytes, offset, offset+8);
-            assert(bytes_block.length==8);//blocks must have 8 bytes each
-            
-            byte[] clear_block = new byte[8];
-            IDEA.idea_block(bytes_block, clear_block, idea.keys_dec);
-            clearStream.write(clear_block);
+            //padding with zero if less than 8 bytes
+            System.arraycopy(msg_bytes, offset, bytes_block, 0, 8);
+
+            IDEA.idea_block(bytes_block, cipher_block, idea.keys_enc);
+            cipherStream.write(cipher_block, 0, 8);
             offset += 8;
         }
-        
-        return new BigInteger(clearStream.getBytes());
-        //return msg;
+
+        return new BigInteger(cipherStream.toByteArray());
+    }
+
+    public static BigInteger decrypt(BigInteger key, BigInteger msg) {
+        byte[] msg_bytes = msg.toByteArray();
+        ByteArrayOutputStream  clearStream = new ByteArrayOutputStream();
+        IDEA idea = new IDEA(key);
+
+        int offset = 0;
+        byte[] clear_block = new byte[8];
+        byte[] bytes_block = new byte[8];
+        while (offset < msg_bytes.length) {
+            assert(offset+8 < msg_bytes.length); //blocks must have 8 bytes each
+            System.arraycopy(msg_bytes, offset, bytes_block, 0, 8);
+
+            IDEA.idea_block(bytes_block, clear_block, idea.keys_dec);
+            clearStream.write(clear_block, 0, 8);
+            offset += 8;
+        }
+
+        return new BigInteger(clearStream.toByteArray());
     }
 
     public String nameOfTheGame () {
