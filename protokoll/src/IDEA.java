@@ -146,6 +146,15 @@ public final class IDEA extends BlockCipher {
 
     }
 
+    public static void idea_block(byte[] in, byte[] out, int[] subkeys) {
+        int[] inShort = new int[4];
+        convertByteArrayToShortIntArray(in,inShort);
+        int[] outShort = new int[4];
+        idea_block(inShort,outShort, subkeys);
+        convertShortIntArrayToByteArray(outShort,out);
+    }
+
+
     /** One block of IDEA, consisting of 8.5 rounds of IDEA.
      *
      * @param in 64 bits of input to encrypt. may be altered!
@@ -170,7 +179,6 @@ public final class IDEA extends BlockCipher {
 
         for(int i = 0; i < out.length; i++)
             out[i] &= 0xffff;
-
     }
 
     /** One round of IDEA.

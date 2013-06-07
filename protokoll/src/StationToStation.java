@@ -9,6 +9,8 @@ import java.math.*;
 import java.util.*;
 import java.io.*;
 
+import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream;
+
 /**
  *
  */
@@ -257,7 +259,28 @@ public final class StationToStation implements Protocol
     }
 
     public BigInteger crypt(BigInteger key, BigInteger msg) {
-        return msg;
+        byte[] msg_bytes = msg.toByteArray();
+        ByteOutputStream  cipherStream = new ByteOutputStream();
+        IDEA idea = new IDEA(key);
+        
+        int offset = 0;
+        while (offset < msg_bytes.length) {
+            byte[] bytes_block = new byte[8];
+            //padding with zero if less than 8 bytes
+            for (int i = 0; i < 8; i++) {
+                if (offset+i < msg_bytes.length) {
+                    bytes_block[i] = msg_bytes[offset+i];
+                }
+                else {
+                    bytes_block[i] = (byte) 0;
+                }
+            }
+            byte[] cipher_block = new byte[8];
+            IDEA.idea_block(bytes_block, cipher_block, idea.keys_enc);
+            cipherStream.write(cipher_block);
+        }
+        
+        return new BigInteger(cipherStream.getBytes());
     }
     public BigInteger decrypt(BigInteger key, BigInteger msg) {
         return msg;
