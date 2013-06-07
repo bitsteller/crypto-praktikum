@@ -112,7 +112,7 @@ public final class StationToStation implements Protocol
             BigInteger m_b = decrypt(K, xm_b);
 
             // test m_b == HASH(y_b*p + y_a)
-            if(m_b != hash(y_a.multiply(p).add(y_b))) {
+            if(!m_b.equals(hash(y_b.multiply(p).add(y_a)))) {
                 System.err.println("Error: hash check failed");
                 System.exit(1);
             }
@@ -204,8 +204,8 @@ public final class StationToStation implements Protocol
             // m_a = IDEA(K, xm_a)
             BigInteger m_a = decrypt(K, xm_a);
 
-            // test m_b == HASH(y_b*p + y_a)
-            if(m_a != hash(y_b.multiply(p).add(y_a))) {
+            // test m_b == HASH(y_a*p + y_b)
+            if(!m_a.equals(hash(y_a.multiply(p).add(y_b)))) {
                 System.err.println("Error: hash check failed");
                 System.exit(1);
             }
@@ -222,7 +222,6 @@ public final class StationToStation implements Protocol
      * there will be garbage.
      */
     public void chat(BigInteger K, boolean init) {
-
         try {
 
             BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
