@@ -9,7 +9,7 @@ import java.math.BigInteger;
 import java.util.Random;
 import java.lang.String;
 
-import de.tubs.cs.iti.jcrypt.chiffre.BigIntegerUtils;
+import de.tubs.cs.iti.jcrypt.chiffre.BigIntegerUtil;
 
 
 /**
@@ -20,7 +20,7 @@ import de.tubs.cs.iti.jcrypt.chiffre.BigIntegerUtils;
  * @author  <a href="mailto:M.Seemann@tu-bs.de">Markus Seemann</a>
  * @version 1.00, 17-Oct-1998
  */
-public class ProtocolUtils extends BigIntegerUtils {
+public class ProtocolUtils extends BigIntegerUtil {
 
   /* Don't let anyone instantiate this class */
   private ProtocolUtils() {
@@ -89,7 +89,7 @@ public class ProtocolUtils extends BigIntegerUtils {
       return ONE;
     do 
     {
-      b = rnd_between(ONE, modulus);	
+      b = randomBetween(ONE, modulus);	
       // Choose random number b with 1 <= b < p.
     } 
     while ((b.modPow(modulus.subtract(ONE).shiftRight(1), modulus)).compareTo(ONE) == 0);
@@ -126,7 +126,7 @@ public class ProtocolUtils extends BigIntegerUtils {
     BigInteger[] lm = new BigInteger[2];
     lm[0] = ZERO;
     lm[1] = p.subtract(ONE);
-    while (even(lm[1])) {
+    while (isEven(lm[1])) {
       lm[1] = lm[1].shiftRight(1);
       lm[0] = lm[0].add(ONE);
     }
@@ -155,7 +155,7 @@ public class ProtocolUtils extends BigIntegerUtils {
   private static BigInteger sucheXkleinerN(BigInteger n) {
     BigInteger x = BigInteger.valueOf(0);
     do {
-      x = rnd_between(ONE, n.subtract(ONE));
+      x = randomBetween(ONE, n.subtract(ONE));
     } while ((x.gcd(n)).compareTo(ONE) != 0);
     return x;
   }
