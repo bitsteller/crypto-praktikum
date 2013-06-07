@@ -8,6 +8,7 @@ import de.tubs.cs.iti.jcrypt.chiffre.*;
 import java.math.*;
 import java.util.*;
 import java.io.*;
+import java.security.MessageDigest;
 
 import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream;
 
@@ -250,6 +251,35 @@ public final class StationToStation implements Protocol
             e.printStackTrace();
             System.exit(0);
         }
+
+    }
+
+    /** Check if a certificate is valid, referencing the TrustedAuthority.
+     * This is mostly copy &amp; paste from TrustedAuthority.
+     * @see TrustedAuthority.newCertificate
+     */
+    public static boolean checkCertificate(Certificate cert) {
+        MessageDigest sha = null;
+
+        // make SHA Hashfunction
+        try {
+            sha = MessageDigest.getInstance("SHA");
+        } catch (Exception e) {
+            System.out.println("Could not create message digest! Exception " + e.toString());
+        }
+
+        // Hashwert bestimmen
+        sha.update(cert.getID().getBytes());
+        sha.update(cert.getData());
+        byte[] digest = sha.digest();
+
+        // the hash we generated ourselves
+        BigInteger nam = new BigInteger(digest).mod(TrustedAuthority.getModulus());
+
+        // the signature, which decrypted should be the hash
+        BigInteger nom = cert.getSignature().modPow(TrustedAuthority.getPublicExponent(), TrustedAuthority.getModulus());
+
+        return nam.equals(nom);
 
     }
 
