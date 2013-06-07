@@ -84,22 +84,25 @@ public final class StationToStation implements Protocol
             K = y_b.modPow(x_a, p);
 
             // m_b = UNIDEA(K, xm_b)
+            BigInteger m_b = decrypt(K, xm_b);
 
             // test m_b == HASH(y_b*p + y_a)
+            if(m_b != hash(y_a.multiply(p).add(y_b))) {
+                System.err.println("Error: hash check failed");
+                System.exit(1);
+            }
 
             // xm_a = IDEA(K, HASH(y_a*p + y_b)
-            BigInteger xm_a = crypt(K, hash(y_a.multiply(p).add(y_b)));
+            BigInteger m_a = hash(y_a.multiply(p).add(y_b));
+            BigInteger xm_a = crypt(K, m_a);
 
-            //send cert_a
             BigInteger cert_a = TrustedAuthority.newCertificate(y_b.toByteArray()).getSignature();
+
+            // send cert_a, xm_a
             com.sendTo(2, cert_a.toString());
-            
-            //send xm_a
             com.sendTo(2, xm_a.toString());
         }
 
-        
-        // send cert_a, xm_a
 
         // chat
     }
