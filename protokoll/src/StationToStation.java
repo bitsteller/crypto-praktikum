@@ -39,6 +39,12 @@ public final class StationToStation implements Protocol
     public void sendFirst () {
         Random rand = new Random();
 
+        BigInteger rsa_e, rsa_d, rsa_n; {
+            rsa_e = new BigInteger(512, 42, rand);
+            rsa_d = new BigInteger(512, 42, rand);
+            rsa_n = rsa_e.multiply(rsa_d);
+        }
+
         BigInteger p, x_a, y_a; {
 
             // p = prime
@@ -76,7 +82,17 @@ public final class StationToStation implements Protocol
 
             // receive y_b, cert_b, xm_b
             BigInteger y_b = new BigInteger(com.receive());
-            BigInteger cert_b = new BigInteger(com.receive());
+
+
+            // receive cert_a
+            Certificate cert_b; {
+                String id = com.receive();
+                byte[] data = new BigInteger(com.receive()).toByteArray();
+                BigInteger sig = new BigInteger(com.receive());
+
+                cert_b = new Certificate(id, data, sig);
+            }
+
             BigInteger xm_b = new BigInteger(com.receive());
 
             // CHECK(cert_b)
@@ -97,10 +113,12 @@ public final class StationToStation implements Protocol
             BigInteger m_a = hash(y_a.multiply(p).add(y_b));
             BigInteger xm_a = crypt(K, m_a);
 
-            BigInteger cert_a = TrustedAuthority.newCertificate(y_b.toByteArray()).getSignature();
+            Certificate cert_a = TrustedAuthority.newCertificate((rsa_e + "" + rsa_n).getBytes());
 
             // send cert_a, xm_a
-            com.sendTo(2, cert_a.toString());
+            com.sendTo(2, cert_a.getID());
+            com.sendTo(2, new BigInteger(cert_a.getData()).toString());
+            com.sendTo(2, cert_a.getSignature().toString());
             com.sendTo(2, xm_a.toString());
         }
 
@@ -111,6 +129,14 @@ public final class StationToStation implements Protocol
 
     /** This is Bob. */
     public void receiveFirst () {
+
+        Random rand = new Random();
+
+        BigInteger rsa_e, rsa_d, rsa_n; {
+            rsa_e = new BigInteger(512, 42, rand);
+            rsa_d = new BigInteger(512, 42, rand);
+            rsa_n = rsa_e.multiply(rsa_d);
+        }
 
         BigInteger p, y_a, K, y_b; {
 
@@ -132,7 +158,12 @@ public final class StationToStation implements Protocol
             BigInteger m_b = hash(y_b.multiply(p).add(y_a));
             BigInteger xm_b = crypt(K, m_b);
 
-            BigInteger cert_b = ONE;
+            Certificate cert_b = TrustedAuthority.newCertificate((rsa_e + "" + rsa_n).getBytes());
+
+            // send cert_a, xm_a
+            com.sendTo(2, cert_b.getID());
+            com.sendTo(2, new BigInteger(cert_b.getData()).toString());
+            com.sendTo(2, cert_b.getSignature().toString());
 
             // send y_b, cert_b, xm_b
             com.sendTo(1, y_b.toString());
@@ -143,8 +174,16 @@ public final class StationToStation implements Protocol
 
         {
 
-            // receive cert_a, xm_a
-            BigInteger cert_a = new BigInteger(com.receive());
+            // receive cert_a
+            Certificate cert_a; {
+                String id = com.receive();
+                byte[] data = new BigInteger(com.receive()).toByteArray();
+                BigInteger sig = new BigInteger(com.receive());
+
+                cert_a = new Certificate(id, data, sig);
+            }
+
+            // receive xm_a
             BigInteger xm_a = new BigInteger(com.receive());
 
             // CHECK(cert_a)
