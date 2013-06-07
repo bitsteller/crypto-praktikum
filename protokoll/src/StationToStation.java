@@ -66,8 +66,7 @@ public final class StationToStation implements Protocol
                 // choose 2 < g < q, we should have a 50% probability of hitting a generating number here.
                 g = BigIntegerUtil.randomBetween(THREE, pMinusOne, rand);
                 // check if the required criteria for a generator of G applies
-            } while(!p.modPow(q, p).equals(pMinusOne));
-
+            } while(!g.modPow(q, p).equals(pMinusOne));
             // x_a \in Z_p
             x_a = BigIntegerUtil.randomBetween(TWO, p.subtract(TWO));
 
