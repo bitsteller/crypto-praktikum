@@ -346,7 +346,7 @@ public final class StationToStation implements Protocol
         byte[] clear_block = new byte[8];
         byte[] bytes_block = new byte[8];
         while (offset < msg_bytes.length) {
-            assert(offset+8 < msg_bytes.length); //blocks must have 8 bytes each
+            assert(offset+7 < msg_bytes.length); //blocks must have 8 bytes each
             System.arraycopy(msg_bytes, offset, bytes_block, 0, 8);
 
             IDEA.idea_block(bytes_block, clear_block, idea.keys_dec);
