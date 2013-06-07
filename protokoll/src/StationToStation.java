@@ -88,12 +88,18 @@ public final class StationToStation implements Protocol
 
 
             // receive cert_a
-            Certificate cert_b; {
+            {
                 String id = com.receive();
                 byte[] data = new BigInteger(com.receive()).toByteArray();
                 BigInteger sig = new BigInteger(com.receive());
 
-                cert_b = new Certificate(id, data, sig);
+                Certificate cert_b = new Certificate(id, data, sig);
+
+                if(!checkCertificate(cert_b)) {
+                    System.err.println("Error: hash check failed");
+                    System.exit(1);
+                }
+
             }
 
             BigInteger xm_b = new BigInteger(com.receive());
@@ -164,9 +170,9 @@ public final class StationToStation implements Protocol
             Certificate cert_b = TrustedAuthority.newCertificate((rsa_e + "" + rsa_n).getBytes());
 
             // send cert_a, xm_a
-            com.sendTo(2, cert_b.getID());
-            com.sendTo(2, new BigInteger(cert_b.getData()).toString());
-            com.sendTo(2, cert_b.getSignature().toString());
+            com.sendTo(1, cert_b.getID());
+            com.sendTo(1, new BigInteger(cert_b.getData()).toString());
+            com.sendTo(1, cert_b.getSignature().toString());
 
             // send y_b, cert_b, xm_b
             com.sendTo(1, y_b.toString());
@@ -175,21 +181,25 @@ public final class StationToStation implements Protocol
 
         }
 
+        // receive cert_a
         {
+            String id = com.receive();
+            byte[] data = new BigInteger(com.receive()).toByteArray();
+            BigInteger sig = new BigInteger(com.receive());
 
-            // receive cert_a
-            Certificate cert_a; {
-                String id = com.receive();
-                byte[] data = new BigInteger(com.receive()).toByteArray();
-                BigInteger sig = new BigInteger(com.receive());
-
-                cert_a = new Certificate(id, data, sig);
-            }
-
-            // receive xm_a
-            BigInteger xm_a = new BigInteger(com.receive());
+            Certificate cert_a = new Certificate(id, data, sig);
 
             // CHECK(cert_a)
+            if(!checkCertificate(cert_a)) {
+                System.err.println("Error: hash check failed");
+                System.exit(1);
+            }
+
+        }
+
+        {
+            // receive xm_a
+            BigInteger xm_a = new BigInteger(com.receive());
 
             // m_a = IDEA(K, xm_a)
             BigInteger m_a = decrypt(K, xm_a);
