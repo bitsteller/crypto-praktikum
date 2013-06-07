@@ -74,9 +74,9 @@ public final class StationToStation implements Protocol
             y_a = g.modPow(x_a, p);
 
             // send p, g, y_a
-            com.sendTo(2, p.toString());
-            com.sendTo(2, g.toString());
-            com.sendTo(2, y_a.toString());
+            com.sendTo(1, p.toString());
+            com.sendTo(1, g.toString());
+            com.sendTo(1, y_a.toString());
 
         }
 
@@ -124,10 +124,10 @@ public final class StationToStation implements Protocol
             Certificate cert_a = TrustedAuthority.newCertificate((rsa_e + "" + rsa_n).getBytes());
 
             // send cert_a, xm_a
-            com.sendTo(2, cert_a.getID());
-            com.sendTo(2, new BigInteger(cert_a.getData()).toString());
-            com.sendTo(2, cert_a.getSignature().toString());
-            com.sendTo(2, xm_a.toString());
+            com.sendTo(1, cert_a.getID());
+            com.sendTo(1, new BigInteger(cert_a.getData()).toString());
+            com.sendTo(1, cert_a.getSignature().toString());
+            com.sendTo(1, xm_a.toString());
         }
 
         // chat
@@ -169,14 +169,14 @@ public final class StationToStation implements Protocol
             Certificate cert_b = TrustedAuthority.newCertificate((rsa_e + "" + rsa_n).getBytes());
 
             // send cert_a, xm_a
-            com.sendTo(1, cert_b.getID());
-            com.sendTo(1, new BigInteger(cert_b.getData()).toString());
-            com.sendTo(1, cert_b.getSignature().toString());
+            com.sendTo(0, cert_b.getID());
+            com.sendTo(0, new BigInteger(cert_b.getData()).toString());
+            com.sendTo(0, cert_b.getSignature().toString());
 
             // send y_b, cert_b, xm_b
-            com.sendTo(1, y_b.toString());
-            com.sendTo(1, cert_b.toString());
-            com.sendTo(1, xm_b.toString());
+            com.sendTo(0, y_b.toString());
+            com.sendTo(0, cert_b.toString());
+            com.sendTo(0, xm_b.toString());
 
         }
 
@@ -236,7 +236,7 @@ public final class StationToStation implements Protocol
                 }
                 tmp = new BigInteger(line.getBytes());
                 tmp = crypt(K, tmp);
-                com.sendTo(init ? 2 : 1, tmp.toString(16));
+                com.sendTo(init ? 1 : 0, tmp.toString(16));
             }
 
             while(true) {
@@ -252,7 +252,7 @@ public final class StationToStation implements Protocol
                 }
                 tmp = new BigInteger(line.getBytes());
                 tmp = crypt(K, tmp);
-                com.sendTo(init ? 2 : 1, tmp.toString(16));
+                com.sendTo(init ? 1 : 0, tmp.toString(16));
 
             }
 
