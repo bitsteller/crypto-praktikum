@@ -330,7 +330,7 @@ public final class StationToStation implements Protocol
         
         int offset = 0;
         while (offset < msg_bytes.length) {
-            assert(offset+8 < msg_bytes.length); //blocks must have 8 bytes each
+            assert(offset+7 < msg_bytes.length); //blocks must have 8 bytes each
             byte[] bytes_block =  Arrays.copyOfRange(msg_bytes, offset, offset+8);
             assert(bytes_block.length==8);//blocks must have 8 bytes each
             
