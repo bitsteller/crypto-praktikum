@@ -7,6 +7,7 @@ import de.tubs.cs.iti.jcrypt.chiffre.*;
 
 import java.math.*;
 import java.util.*;
+import java.io.*;
 
 /**
  *
@@ -103,8 +104,9 @@ public final class StationToStation implements Protocol
             com.sendTo(2, xm_a.toString());
         }
 
-
         // chat
+        chat(K, true);
+
     }
 
     /** This is Bob. */
@@ -159,8 +161,57 @@ public final class StationToStation implements Protocol
         }
 
         // chat
+        chat(K, false);
 
     }
+
+    /** Chat, given a K.
+     * All other participants are expected to have agreed on this K! Otherwise,
+     * there will be garbage.
+     */
+    public void chat(BigInteger K, boolean init) {
+
+        try {
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+            String line;
+            BigInteger tmp;
+
+            if(init) {
+                // yeah yeah, code duplication... this saves runtime, one if per loop!
+                line = in.readLine();
+                if(line == null) {
+                    return;
+                }
+                tmp = new BigInteger(line.getBytes());
+                tmp = crypt(K, tmp);
+                com.sendTo(init ? 2 : 1, tmp.toString(16));
+            }
+
+            while(true) {
+
+                line = com.receive();
+                tmp = new BigInteger(line, 16);
+                tmp = decrypt(K, tmp);
+                System.out.println(new String(tmp.toByteArray()));
+
+                line = in.readLine();
+                if(line == null) {
+                    return;
+                }
+                tmp = new BigInteger(line.getBytes());
+                tmp = crypt(K, tmp);
+                com.sendTo(init ? 2 : 1, tmp.toString(16));
+
+            }
+
+        } catch(IOException e) {
+            e.printStackTrace();
+            System.exit(0);
+        }
+
+    }
+
 
     public BigInteger hash(BigInteger x) {
         return x;
