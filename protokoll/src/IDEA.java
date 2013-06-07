@@ -1,23 +1,3 @@
-import java.io.*;
-import java.math.BigInteger;
-import java.nio.IntBuffer;
-import java.util.Arrays;
-import java.util.Random;
-
-import de.tubs.cs.iti.jcrypt.chiffre.BlockCipher;
-
-/*
- * jCrypt - Programmierumgebung für das Kryptologie-Praktikum
- * Studienarbeit am Institut für Theoretische Informatik der
- * Technischen Universität Braunschweig
- * 
- * Datei:        IDEA.java
- * Beschreibung: Dummy-Implementierung des International Data Encryption
- *               Algorithm (IDEA)
- * Erstellt:     30. März 2010
- * Autor:        Martin Klußmann
-ask3;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
@@ -47,6 +27,13 @@ public final class IDEA extends BlockCipher {
     protected final static BigInteger multMod = BigInteger.valueOf(65537L);
 
     public int[] keys_enc, keys_dec;
+    
+    
+    IDEA(BigInteger key) {
+        byte[] key_bytes = key.and(_128bits).toByteArray();
+        keys_enc = idea_subkeys(key_bytes);
+        keys_dec = idea_deckeys(keys_enc);
+    }
 
     /** generate subkeys.
      *
