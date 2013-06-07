@@ -278,12 +278,29 @@ public final class StationToStation implements Protocol
             byte[] cipher_block = new byte[8];
             IDEA.idea_block(bytes_block, cipher_block, idea.keys_enc);
             cipherStream.write(cipher_block);
+            offset +=8;
         }
         
         return new BigInteger(cipherStream.getBytes());
     }
     public BigInteger decrypt(BigInteger key, BigInteger msg) {
-        return msg;
+        byte[] msg_bytes = msg.toByteArray();
+        ByteOutputStream  clearStream = new ByteOutputStream();
+        IDEA idea = new IDEA(key);
+        
+        int offset = 0;
+        while (offset < msg_bytes.length) {
+            assert(offset+8 < msg_bytes.length); //blocks must have 8 bytes each
+            byte[] bytes_block =  Arrays.copyOfRange(msg_bytes, offset, offset+8);
+            assert(bytes_block.length==8);//blocks must have 8 bytes each
+            
+            byte[] clear_block = new byte[8];
+            IDEA.idea_block(bytes_block, clear_block, idea.keys_dec);
+            clearStream.write(clear_block);
+            offset += 8;
+        }
+        
+        return new BigInteger(clearStream.getBytes());
     }
 
     public String nameOfTheGame () {
