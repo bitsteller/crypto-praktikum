@@ -2,14 +2,14 @@
  * @(#)ProtocolUtils.java	1.00 17-Oct-1998
  */
 
-package de.tubs.cs.iti.krypto.protokoll;
+package de.tubs.cs.iti.jcrypt.protokoll;
 
 
 import java.math.BigInteger;
 import java.util.Random;
 import java.lang.String;
 
-import de.tubs.cs.iti.krypto.chiffre.BigIntegerUtils;
+import de.tubs.cs.iti.jcrypt.chiffre.BigIntegerUtils;
 
 
 /**

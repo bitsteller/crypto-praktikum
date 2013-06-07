@@ -3,7 +3,7 @@
  *
  * This Code was initially written by Lars Girndt
  */
-package de.tubs.cs.iti.krypto.protokoll;
+package de.tubs.cs.iti.jcrypt.protokoll;
 
 /**
  * Diese Klasse stellt mit einem Kommandozeilenclient eine Alternative
@@ -17,11 +17,11 @@ package de.tubs.cs.iti.krypto.protokoll;
  * <ol>
  * <li>Server starten mit
 <pre>
-java de.tubs.cs.iti.krypto.protokoll.Server
+java de.tubs.cs.iti.jcrypt.protokoll.Server
 </pre>
  * <li> dann beide clients starten mit jeweils
 <pre>
-java de.tubs.cs.iti.krypto.protokoll.CmdLineClient PROTOCOL HOST PORT
+java de.tubs.cs.iti.jcrypt.protokoll.CmdLineClient PROTOCOL HOST PORT
 </pre>
  * </ol>
  * @author <a href="l.girndt @tu-bs.de">Lars Girndt</a>
@@ -47,7 +47,7 @@ public class CmdLineClient implements IClient {
 	}
 
 	/* (non-Javadoc)
-	 * @see de.tubs.cs.iti.krypto.protokoll.IClient#end(java.lang.String)
+	 * @see de.tubs.cs.iti.jcrypt.protokoll.IClient#end(java.lang.String)
 	 */
 	public void end(String message) {
 		// TODO Auto-generated method stub
@@ -55,7 +55,7 @@ public class CmdLineClient implements IClient {
 	}
 
 	/* (non-Javadoc)
-	 * @see de.tubs.cs.iti.krypto.protokoll.IClient#playerNumberChanged(int)
+	 * @see de.tubs.cs.iti.jcrypt.protokoll.IClient#playerNumberChanged(int)
 	 */
 	public void playerNumberChanged(int newPlayerNumber) {
 		// TODO Auto-generated method stub

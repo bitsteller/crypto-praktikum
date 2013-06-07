@@ -1,4 +1,4 @@
-package de.tubs.cs.iti.krypto.protokoll;
+package de.tubs.cs.iti.jcrypt.protokoll;
 
 import java.awt.*;
 import java.awt.event.*;

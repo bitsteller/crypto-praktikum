@@ -3,7 +3,7 @@
  *
  * This Code was initially written by Lars Girndt
  */
-package de.tubs.cs.iti.krypto.protokoll;
+package de.tubs.cs.iti.jcrypt.protokoll;
 
 /**
  * @author <a href="l.girndt@tu-bs.de">Lars Girndt</a>

@@ -2,13 +2,13 @@
  * @(#)TrustedAuthority.java		1.00, 13-Feb-2004
  */
 
-package de.tubs.cs.iti.krypto.protokoll;
+package de.tubs.cs.iti.jcrypt.protokoll;
 
 import java.io.*;
 import java.math.*;
 import java.security.*;
 import java.util.*;
-import de.tubs.cs.iti.krypto.chiffre.*;
+import de.tubs.cs.iti.jcrypt.chiffre.*;
 
 
 /**
@@ -23,7 +23,7 @@ import de.tubs.cs.iti.krypto.chiffre.*;
  *
  * @author   <a href="mailto:milius@iti.cs.tu-bs.de">Stefan Milius</a>
  * @version  1.00, 13-Feb-2004
- * @see de.tubs.cs.iti.krypto.protokoll.Certificate
+ * @see de.tubs.cs.iti.jcrypt.protokoll.Certificate
  */
 public class TrustedAuthority {
     private static final BigInteger n = new BigInteger("79789947245034048876449632331010537488007838227754096616496400243172779697173491917503541030774060122406734057542931654034376201867932349157694914353473530057321261403684234412726751583511641702515524622585646506469184584287454398409323036519654853301047393604564215922344133987055405809886008559516734814117");;

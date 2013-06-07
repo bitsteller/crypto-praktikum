@@ -2,7 +2,7 @@
  * @(#)Certificate.java		1.00, 13-Feb-2004
  */
 
-package de.tubs.cs.iti.krypto.protokoll;
+package de.tubs.cs.iti.jcrypt.protokoll;
 
 import java.math.BigInteger;
 
@@ -14,7 +14,7 @@ import java.math.BigInteger;
  *
  * @author   <a href="mailto:milius@iti.cs.tu-bs.de">Stefan Milius</a>
  * @version  1.00, 13-Feb-2004
- * @see de.tubs.cs.iti.krypto.protokoll.TrustedAuthority
+ * @see de.tubs.cs.iti.jcrypt.protokoll.TrustedAuthority
  */
 public class Certificate {
 
