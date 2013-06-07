@@ -168,14 +168,15 @@ public final class StationToStation implements Protocol
 
             Certificate cert_b = TrustedAuthority.newCertificate((rsa_e + "" + rsa_n).getBytes());
 
-            // send cert_a, xm_a
+            // send y_b
+            com.sendTo(0, y_b.toString());
+
+            // send cert_b
             com.sendTo(0, cert_b.getID());
             com.sendTo(0, new BigInteger(cert_b.getData()).toString());
             com.sendTo(0, cert_b.getSignature().toString());
 
-            // send y_b, cert_b, xm_b
-            com.sendTo(0, y_b.toString());
-            com.sendTo(0, cert_b.toString());
+            // send xm_b
             com.sendTo(0, xm_b.toString());
 
         }
