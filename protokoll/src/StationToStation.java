@@ -38,7 +38,7 @@ public final class StationToStation implements Protocol
     public void sendFirst () {
         Random rand = new Random();
 
-        BigInteger p, g, x_a, y_a; {
+        BigInteger p, x_a, y_a; {
 
             // p = prime
             BigInteger q;
@@ -51,6 +51,7 @@ public final class StationToStation implements Protocol
 
             // same algorithm to find a generator
             BigInteger pMinusOne = p.subtract(ONE);
+            BigInteger g;
             do {
                 // choose 2 < g < q, we should have a 50% probability of hitting a generating number here.
                 g = BigIntegerUtil.randomBetween(THREE, pMinusOne, rand);
@@ -63,12 +64,12 @@ public final class StationToStation implements Protocol
             // y_a = g^{x_a} mod p
             y_a = g.modPow(x_a, p);
 
-        }
+            // send p, g, y_a
+            com.sendTo(2, p.toString());
+            com.sendTo(2, g.toString());
+            com.sendTo(2, y_a.toString());
 
-        // send p, g, y_a
-        com.sendTo(2, p.toString());
-        com.sendTo(2, g.toString());
-        com.sendTo(2, y_a.toString());
+        }
 
         BigInteger K; {
 
@@ -107,15 +108,15 @@ public final class StationToStation implements Protocol
     /** This is Bob. */
     public void receiveFirst () {
 
-        BigInteger p, g, y_a, x_b, K, y_b; {
+        BigInteger p, y_a, K, y_b; {
 
             // receive p, g, y_a
             p = new BigInteger(com.receive());
-            g = new BigInteger(com.receive());
+            BigInteger g = new BigInteger(com.receive());
             y_a = new BigInteger(com.receive());
 
             // x_b \in Z_p
-            x_b = BigIntegerUtil.randomBetween(TWO, p.subtract(TWO));
+            BigInteger x_b = BigIntegerUtil.randomBetween(TWO, p.subtract(TWO));
 
             // K = y_a^{x_b} mod p
             K = y_a.modPow(x_b, p);
