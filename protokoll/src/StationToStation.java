@@ -88,14 +88,13 @@ public final class StationToStation implements Protocol
             // test m_b == HASH(y_b*p + y_a)
 
             // xm_a = IDEA(K, HASH(y_a*p + y_b)
-            BigInteger xm_a = y_a.multiply(p).add(y_b);
+            BigInteger xm_a = crypt(K, hash(y_a.multiply(p).add(y_b)));
 
             //send cert_a
             BigInteger cert_a = TrustedAuthority.newCertificate(y_b.toByteArray()).getSignature();
             com.sendTo(2, cert_a.toString());
             
             //send xm_a
-            com.sendTo(2, cert_a.toString());
             com.sendTo(2, xm_a.toString());
         }
 
