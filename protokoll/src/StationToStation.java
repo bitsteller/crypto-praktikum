@@ -97,23 +97,68 @@ public final class StationToStation implements Protocol
 
     /** This is Bob. */
     public void receiveFirst () {
-        // receive p, g, y_a
 
-        // x_b \in Z_p
-        // K = y_a^{x_b} mod p
-        // y_b = g^{x_b} mod p
-        // xm_b = IDEA(K, HASH(y_b*p + y_a)
+        BigInteger p, g, y_a, x_b, K, y_b; {
 
-        // send y_b, cert_b, xm_b
+            // receive p, g, y_a
+            p = new BigInteger(com.receive());
+            g = new BigInteger(com.receive());
+            y_a = new BigInteger(com.receive());
 
-        // receive cert_a, xm_a
+            // x_b \in Z_p
+            x_b = BigIntegerUtil.randomBetween(TWO, p.subtract(TWO));
 
-        // CHECK(cert_a)
-        // m_a = IDEA(K, xm_a)
-        // test m_b == HASH(y_b*p + y_a)
+            // K = y_a^{x_b} mod p
+            K = y_a.modPow(x_b, p);
+
+            // y_b = g^{x_b} mod p
+            y_b = g.modPow(x_b, p);
+
+            // xm_b = IDEA(K, HASH(y_b*p + y_a)
+            BigInteger m_b = hash(y_b.multiply(p).add(y_a));
+            BigInteger xm_b = crypt(K, m_b);
+
+            BigInteger cert_b = ONE;
+
+            // send y_b, cert_b, xm_b
+            com.sendTo(1, y_b.toString());
+            com.sendTo(1, cert_b.toString());
+            com.sendTo(1, xm_b.toString());
+
+        }
+
+        {
+
+            // receive cert_a, xm_a
+            BigInteger cert_a = new BigInteger(com.receive());
+            BigInteger xm_a = new BigInteger(com.receive());
+
+            // CHECK(cert_a)
+
+            // m_a = IDEA(K, xm_a)
+            BigInteger m_a = decrypt(K, xm_a);
+
+            // test m_b == HASH(y_b*p + y_a)
+            if(m_a != hash(y_b.multiply(p).add(y_a))) {
+                System.err.println("Error: hash check failed");
+                System.exit(1);
+            }
+
+        }
 
         // chat
 
+    }
+
+    public BigInteger hash(BigInteger x) {
+        return x;
+    }
+
+    public BigInteger crypt(BigInteger key, BigInteger msg) {
+        return msg;
+    }
+    public BigInteger decrypt(BigInteger key, BigInteger msg) {
+        return msg;
     }
 
     public String nameOfTheGame () {
