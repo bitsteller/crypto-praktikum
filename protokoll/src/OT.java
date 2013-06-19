@@ -62,17 +62,21 @@ public final class OT implements Protocol
         // receive q
         BigInteger q = new BigInteger(com.receive(), 16);
         
+        //send random m0, m1 between 0 and p. m0 != m1
+        BigInteger m0, m1; {
+            m0 = BigIntegerUtil.randomBetween(ZERO, p);
+            do {
+                m1 = BigIntegerUtil.randomBetween(ZERO, p);
+            } while(m0.equals(m1));
+        }
+
+        // send both
+        com.sendTo(1, m0.toString(16));
+        com.sendTo(1, m1.toString(16));
+
         BigInteger s0, s1; {
 
             BigInteger k0, k1; {
-
-                //send random m0, m1 between 0 and p. m0 != m1
-                BigInteger m0, m1; {
-                    m0 = BigIntegerUtil.randomBetween(ZERO, p);
-                    do {
-                        m1 = BigIntegerUtil.randomBetween(ZERO, p);
-                    } while(m0.equals(m1));
-                }
 
                 // k0 = decipher((q-m0) mod p)
                 k0 = elGamalC_a.decipherBlock(q.subtract(m0).mod(p));
