@@ -164,7 +164,9 @@ public final class OT implements Protocol
         BigInteger k_quer = M_strich[s.xor(b).xor(ONE).intValue()].subtract(M_sb).mod(p);
         
         //check S_{b ^ 1} != k_quer (otherwise: betrayed!)
-        if (S[b.xor(ONE).intValue()].equals(k_quer)) {
+        ElGamalSignature sign = new ElGamalSignature(p,q,y);
+        
+        if (sign.verifyBlock(k_quer, S[b.xor(ONE).intValue()])) {
             System.out.println("You have been betrayed!");
         }
         else {
