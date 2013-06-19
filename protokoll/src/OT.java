@@ -75,7 +75,9 @@ public final class OT implements Protocol
         // receive q
         BigInteger q = new BigInteger(com.receive(), 16);
         
-        BigInteger s0, s1; {
+        BigInteger s0, s1;
+        BigInteger M0_dash, M1_dash;
+        int s; {
 
             BigInteger k0, k1; {
 
@@ -89,21 +91,21 @@ public final class OT implements Protocol
             s0 = elGamalS_a.signBlock(k0);
             //S1 = sign(k1)
             s1 = elGamalS_a.signBlock(k1);
-        }
+
 
         // select random s in {0,1}
-        int s = new Random().nextBoolean() ? 1 : 0;
+            s = new Random().nextBoolean() ? 1 : 0;
         
-        BigInteger M0_dash, M1_dash; {
             // read messages to be send M0, M1 (between 0 and p)
             // Hamster. A dentist. Hardcode. Steven Seagal~
             BigInteger M0 = new BigInteger("1111111111111111111111111111111111111");
-            BigInteger M1 = new BigInteger("1111111111111111111111111111111111111");
+            BigInteger M1 = new BigInteger("2222222222222222222222222222222222222");
 
             // send M_strich_0 := (M0 + k_{s xor 0}) mod p
-            M0_dash = M0.add(s == 1 ? s1 : s0).mod(p);
+            M0_dash = M0.add(s == 1 ? k1 : k0).mod(p);
             // send M_strich_1 := (M1 + k_{s xor 1}) mod p
-            M1_dash = M1.add(s == 0 ? s1 : s0).mod(p);
+            M1_dash = M1.add(s == 0 ? k1 : k0).mod(p);
+
         }
 
         com.sendTo(1, M0_dash.toString(16));
