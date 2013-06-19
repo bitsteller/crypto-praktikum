@@ -37,7 +37,7 @@ public final class OT implements Protocol
     }
 
     /** This ia Alice. */
-    public void sendFirst () {
+    public void sendFirst () {        
         //send public key: p, g, y
         //send random m1,m2 between 0 and p. m1 != m2
         
@@ -49,6 +49,8 @@ public final class OT implements Protocol
         //S1 = sign(k1)
         //select random s in {0,1}
         
+        //read messages to be send M0, M1 (between 0 and p)
+
         //send M_strich_0 := (M0 + k_{s xor 0}) mod p
         //send M_strich_1 := (M1 + k_{s xor 1}) mod p
         //send S0, S1
