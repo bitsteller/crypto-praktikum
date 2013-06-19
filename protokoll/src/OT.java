@@ -108,6 +108,7 @@ public final class OT implements Protocol
         }
         else {
             System.out.println("Congratulations! With a probability of 1/2 you were not betrayed!");
+            System.out.println("The received secret is: " + M_sb);
         }
     }
     
