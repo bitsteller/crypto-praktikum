@@ -38,13 +38,41 @@ public final class OT implements Protocol
 
     /** This ia Alice. */
     public void sendFirst () {
+        //send public key: p, g, y
+        //send random m1,m2 between 0 and p. m1 != m2
         
+        //receive q
+        
+        //k0 = decipher((q-m0) mod p)
+        //k1 = decipher((q-m0) mod p)
+        //S0 = sign(k0)
+        //S1 = sign(k1)
+        //select random s in {0,1}
+        
+        //send M0 = (M0 + k_{s xor 0}) mod p
+        //send M0 = (M1 + k_{s xor 1}) mod p
+        //send S0, S1
+        //send s
     }
 
     /** This is Bob. */
     public void receiveFirst () {
-
+        //receive p,g,y
+        //receive m0,m1
+        
+        //select random b in {0,1}
+        //select random k between 0 and p
+        
+        //send q:= (crypt(k) + m_b) mod p^2
+        
+        //receive M_strich_0, M_strich_1, S0,S1,s
+        
+        //compute M_{s ^ b} := M_strich_{s ^ b} - k
+        //compute k_quer := M_strich_{s ^ b ^ 1} - M_{s ^ b}
+        
+        //check S_{b ^ 1} != k_quer (otherwise: betrayed!)
     }
+    
     
 //    public static BigInteger crypt(BigInteger key, BigInteger msg) {
 //
