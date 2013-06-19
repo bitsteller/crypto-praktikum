@@ -13,6 +13,8 @@ import de.tubs.cs.iti.jcrypt.chiffre.*;
 public final class ElGamalCipher extends BlockCipher {
 
     public BigInteger decipherBlock(BigInteger cipher) {
+        assert(x != null);
+
         //split cipher back into y and b parts
         BigInteger yb = cipher.mod(q);
         BigInteger b = cipher.divide(q);
@@ -22,7 +24,23 @@ public final class ElGamalCipher extends BlockCipher {
         BigInteger clear = b.multiply(yb.modPow(exp, q)).mod(q);
         return clear;
     }
-    
+
+    public ElGamalCipher() {
+    }
+
+    public ElGamalCipher(BigInteger q, BigInteger g, BigInteger y) {
+        this.q = q;
+        this.g = g;
+        this.y = y;
+    }
+
+    public ElGamalCipher(BigInteger q, BigInteger g, BigInteger y, BigInteger x) {
+        this.q = q;
+        this.g = g;
+        this.y = y;
+        this.x = x;
+    }
+
     /**
      * Entschlüsselt den durch den FileInputStream <code>ciphertext</code>
      * gegebenen Chiffretext und schreibt den Klartext in den FileOutputStream

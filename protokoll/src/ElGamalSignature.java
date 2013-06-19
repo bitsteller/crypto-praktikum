@@ -24,6 +24,12 @@ public final class ElGamalSignature extends Signature {
     public static final BigInteger TWO = BigInteger.valueOf(2L);
     public static final BigInteger THREE = BigInteger.valueOf(3L);
 
+    public ElGamalSignature(BigInteger q, BigInteger g, BigInteger y) {
+        this.q = q;
+        this.g = g;
+        this.y = y;
+    }
+
     /**
      * Erzeugt einen neuen Schlüssel.
      * 
@@ -132,6 +138,8 @@ public final class ElGamalSignature extends Signature {
     }
 
     public BigInteger signBlock(BigInteger M) {
+
+        assert(x != null);
         // Algorithm 7.8
         BigInteger k;
         do {
