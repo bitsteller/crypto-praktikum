@@ -172,6 +172,13 @@ public final class OT implements Protocol
         else {
             System.out.println("Congratulations! With a probability of 1/2 you were not betrayed!");
             System.out.println("The received secret is: " + M_sb);
+            
+            if (sign.verifyBlock(k, S[b.intValue()])) {
+                System.out.println("The signature was correct!");
+            }
+            else {
+                System.out.println("But the signature is wrong.");
+            }
         }
     }
     
