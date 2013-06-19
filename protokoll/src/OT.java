@@ -59,8 +59,6 @@ public final class OT implements Protocol
         com.sendTo(1, elGamalC_a.g.toString(16));
         com.sendTo(1, elGamalC_a.y.toString(16));
 
-        // receive q
-        BigInteger q = new BigInteger(com.receive(), 16);
         
         //send random m0, m1 between 0 and p. m0 != m1
         BigInteger m0, m1; {
@@ -74,6 +72,9 @@ public final class OT implements Protocol
         com.sendTo(1, m0.toString(16));
         com.sendTo(1, m1.toString(16));
 
+        // receive q
+        BigInteger q = new BigInteger(com.receive(), 16);
+        
         BigInteger s0, s1; {
 
             BigInteger k0, k1; {
@@ -146,7 +147,7 @@ public final class OT implements Protocol
         //receive M_strich_0, M_strich_1
         BigInteger[] M_strich= new BigInteger[2];
         M_strich[0] = new BigInteger(com.receive(), 16);
-        M_strich[1] = new BigInteger(com.receive());
+        M_strich[1] = new BigInteger(com.receive(), 16);
         
         //receive S0,S1
         BigInteger[] S= new BigInteger[2];
