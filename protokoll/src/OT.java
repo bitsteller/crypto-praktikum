@@ -87,15 +87,21 @@ public final class OT implements Protocol
                 k1 = elGamalC_a.decipherBlock(q.subtract(m1).mod(p.pow(2)));
             }
 
+            System.out.println("k0'" + k0.toString(16));
+            System.out.println("k1'" + k1.toString(16));
+
             //S0 = sign(k0)
             s0 = elGamalS_a.signBlock(k0);
             //S1 = sign(k1)
             s1 = elGamalS_a.signBlock(k1);
 
+            System.out.println("s0'" + s0.toString(16));
+            System.out.println("s1'" + s1.toString(16));
 
-        // select random s in {0,1}
+
+            // select random s in {0,1}
             s = new Random().nextBoolean() ? 1 : 0;
-        
+
             // read messages to be send M0, M1 (between 0 and p)
             // Hamster. A dentist. Hardcode. Steven Seagal~
             BigInteger M0 = new BigInteger("1111111111111111111111111111111111111");
@@ -105,6 +111,9 @@ public final class OT implements Protocol
             M0_dash = M0.add(s == 1 ? k1 : k0).mod(p);
             // send M_strich_1 := (M1 + k_{s xor 1}) mod p
             M1_dash = M1.add(s == 0 ? k1 : k0).mod(p);
+
+            System.out.println("M0'" + M0_dash.toString(16));
+            System.out.println("M1'" + M1_dash.toString(16));
 
         }
 
