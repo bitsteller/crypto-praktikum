@@ -37,7 +37,7 @@ public final class OT implements Protocol
     }
 
     /** This ia Alice. */
-    public void sendFirst () {        
+    public void sendFirst () {
         //send public key: p, g, y
         //send random m1,m2 between 0 and p. m1 != m2
         
@@ -60,19 +60,55 @@ public final class OT implements Protocol
     /** This is Bob. */
     public void receiveFirst () {
         //receive p,g,y
+        BigInteger p = new BigInteger(com.receive());
+        BigInteger g = new BigInteger(com.receive());
+        BigInteger y = new BigInteger(com.receive());
+
         //receive m0,m1
-        
+        BigInteger[] m= new BigInteger[2];
+        m[0] = new BigInteger(com.receive());
+        m[1] = new BigInteger(com.receive());
+
         //select random b in {0,1}
+        BigInteger b = new BigInteger(1, new Random());
+        
         //select random k between 0 and p
+        BigInteger k;
+        do {
+            k = new BigInteger(p.bitLength(), new Random());
+        } while (k.compareTo(p) >= 0);
         
         //send q:= (crypt(k) + m_b) mod p^2
+        //ElGamalCipher elgamal = new ElGamalCipher(p,g,y);
         
-        //receive M_strich_0, M_strich_1, S0,S1,s
+        //com.sendTo(0, y_b.toString()); TODO:implement
+        
+        //receive M_strich_0, M_strich_1
+        BigInteger[] M_strich= new BigInteger[2];
+        M_strich[0] = new BigInteger(com.receive());
+        M_strich[1] = new BigInteger(com.receive());
+        
+        //receive S0,S1
+        BigInteger[] S= new BigInteger[2];
+        S[0] = new BigInteger(com.receive());
+        S[1] = new BigInteger(com.receive());
+        
+        //receive s
+        BigInteger s = new BigInteger(com.receive());
         
         //compute M_{s ^ b} := M_strich_{s ^ b} - k
+        BigInteger M_sb = M_strich[s.xor(b).intValue()].subtract(k);
+        
         //compute k_quer := M_strich_{s ^ b ^ 1} - M_{s ^ b}
+        BigInteger k_quer = M_strich[s.xor(b).xor(ONE).intValue()].subtract(M_sb);
         
         //check S_{b ^ 1} != k_quer (otherwise: betrayed!)
+        if (S[b.xor(ONE).intValue()] == k_quer) {
+            System.out.println("You have been betrayed!");
+        }
+        else {
+            System.out.println("Congratulations! With a probability of 1/2 you were not betrayed!");
+        }
     }
     
     
