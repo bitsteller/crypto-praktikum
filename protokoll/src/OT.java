@@ -143,36 +143,51 @@ public final class OT implements Protocol
 
         //select random b in {0,1}
         BigInteger b = new BigInteger(1, new Random());
+        System.out.println("b=" + b);
         
         //select random k between 0 and p
         BigInteger k;
         do {
             k = new BigInteger(p.bitLength(), new Random());
         } while (k.compareTo(p) >= 0);
+        System.out.println("k=" + k);
+
         
         //send q:= (crypt(k) + m_b) mod p^2
         ElGamalCipher elgamal = new ElGamalCipher(p,g,y);
         BigInteger q = elgamal.encipherBlock(k).add(m[b.intValue()]).mod(p.pow(2));
+        System.out.println("q=" + q);
         com.sendTo(0, q.toString());
         
         //receive M_strich_0, M_strich_1
         BigInteger[] M_strich= new BigInteger[2];
         M_strich[0] = new BigInteger(com.receive(), 16);
         M_strich[1] = new BigInteger(com.receive(), 16);
+        System.out.println("M0'=" + M_strich[0]);
+        System.out.println("M1'=" + M_strich[1]);
+
         
         //receive S0,S1
         BigInteger[] S= new BigInteger[2];
         S[0] = new BigInteger(com.receive(), 16);
         S[1] = new BigInteger(com.receive(), 16);
+        System.out.println("S0'=" + S[0]);
+        System.out.println("S1'=" + S[1]);
+
         
         //receive s
         BigInteger s = new BigInteger(com.receive(), 16);
+        System.out.println("s'=" + s);
         
         //compute M_{s ^ b} := M_strich_{s ^ b} - k
         BigInteger M_sb = M_strich[s.xor(b).intValue()].subtract(k).mod(p);
         
         //compute k_quer := M_strich_{s ^ b ^ 1} - M_{s ^ b}
         BigInteger k_quer = M_strich[s.xor(b).xor(ONE).intValue()].subtract(M_sb).mod(p);
+        BigInteger k_quer2 = M_strich[s.xor(b).intValue()].subtract(M_sb).mod(p);
+
+        System.out.println("k_quer'=" + k_quer);
+        System.out.println("k_quer'=" + k_quer2);
         
         //check S_{b ^ 1} != k_quer (otherwise: betrayed!)
         ElGamalSignature sign = new ElGamalSignature(p,q,y);
@@ -184,7 +199,7 @@ public final class OT implements Protocol
             System.out.println("Congratulations! With a probability of 1/2 you were not betrayed!");
             System.out.println("The received secret is: " + M_sb);
             
-            if (sign.verifyBlock(k, S[b.intValue()])) {
+            if (sign.verifyBlock(k_quer2, S[b.intValue()])) {
                 System.out.println("The signature was correct!");
             }
             else {
