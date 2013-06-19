@@ -24,6 +24,13 @@ public final class ElGamalSignature extends Signature {
     public static final BigInteger TWO = BigInteger.valueOf(2L);
     public static final BigInteger THREE = BigInteger.valueOf(3L);
 
+    public ElGamalSignature(BigInteger q, BigInteger g, BigInteger y, BigInteger x) {
+        this.q = q;
+        this.g = g;
+        this.y = y;
+        this.x = x;
+    }
+
     public ElGamalSignature(BigInteger q, BigInteger g, BigInteger y) {
         this.q = q;
         this.g = g;
@@ -228,15 +235,16 @@ public final class ElGamalSignature extends Signature {
 
         System.out.println("Correct signature!");
     }
-    
-    
+
+    /*
     public static void main(String[]args) {
         ElGamalSignature eg = new ElGamalSignature();
         eg.makeKey();
-        
+
         BigInteger clear = new BigInteger("1");
         BigInteger cipher = eg.signBlock(clear);
         assert(eg.verifyBlock(clear, cipher));
     }
+    */
 
 }

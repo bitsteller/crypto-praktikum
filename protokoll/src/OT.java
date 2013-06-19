@@ -38,23 +38,80 @@ public final class OT implements Protocol
 
     /** This ia Alice. */
     public void sendFirst () {
-        //send public key: p, g, y
-        //send random m1,m2 between 0 and p. m1 != m2
-        
-        //receive q
-        
-        //k0 = decipher((q-m0) mod p)
-        //k1 = decipher((q-m0) mod p)
-        //S0 = sign(k0)
-        //S1 = sign(k1)
-        //select random s in {0,1}
-        
-        //read messages to be send M0, M1 (between 0 and p)
 
-        //send M_strich_0 := (M0 + k_{s xor 0}) mod p
-        //send M_strich_1 := (M1 + k_{s xor 1}) mod p
-        //send S0, S1
-        //send s
+        // create ElGamal cipher
+        BigInteger p;
+        ElGamalCipher elGamalC_a;
+        ElGamalSignature elGamalS_a;
+        {
+            // note: q is p in elgamal (too lazy to refactor that, "never touch a running system")
+            // we just use a local p here, since we use it rather often anyways
+            p = new BigInteger("4988735951183711405443349413015910122453507015594895638933838601555750189585703700647655985269637551634513770201277370413860951650702374379627998821919409");
+            BigInteger g = new BigInteger("4403105895869798297264918950735787070665047406714785361037216842427722734684061748868589917485012596281820467352001338223691996653533143166890875549812531");
+            BigInteger y = new BigInteger("3670294064109445804998782973709772470002041046377612489028768098078250713079795031354099562309432613560558383306865142781216201315104971340333690591679721");
+            BigInteger x = new BigInteger("4589946301809196862611751989088793376762175950291076147544077975213763218505486754450017554342955014202444667772016113058406939298289857995054770609176615");
+            elGamalC_a = new ElGamalCipher(p, g, y, x);
+            elGamalS_a = new ElGamalSignature(p, g, y, x);
+        }
+
+        //send public key: p, g, y
+        com.sendTo(1, p.toString(16));
+        com.sendTo(1, elGamalC_a.g.toString(16));
+        com.sendTo(1, elGamalC_a.y.toString(16));
+
+        // receive q
+        BigInteger q = new BigInteger(com.receive(), 16);
+        
+        BigInteger s0, s1; {
+
+            BigInteger k0, k1; {
+
+                //send random m0, m1 between 0 and p. m0 != m1
+                BigInteger m0, m1; {
+                    m0 = BigIntegerUtil.randomBetween(ZERO, p);
+                    do {
+                        m1 = BigIntegerUtil.randomBetween(ZERO, p);
+                    } while(m0.equals(m1));
+                }
+
+                // k0 = decipher((q-m0) mod p)
+                k0 = elGamalC_a.decipherBlock(q.subtract(m0).mod(p));
+                // k1 = decipher((q-m1) mod p)
+                k1 = elGamalC_a.decipherBlock(q.subtract(m1).mod(p));
+            }
+
+            //S0 = sign(k0)
+            s0 = elGamalS_a.signBlock(k0);
+            //S1 = sign(k1)
+            s1 = elGamalS_a.signBlock(k1);
+
+        }
+
+        // select random s in {0,1}
+        int s = new Random().nextBoolean() ? 1 : 0;
+        
+        BigInteger M0_dash, M1_dash; {
+            // read messages to be send M0, M1 (between 0 and p)
+            // Hamster. A dentist. Hardcode. Steven Seagal~
+            BigInteger M0 = new BigInteger("1111111111111111111111111111111111111");
+            BigInteger M1 = new BigInteger("2222222222222222222222222222222222222");
+
+            // send M_strich_0 := (M0 + k_{s xor 0}) mod p
+            M0_dash = M0.add(s == 1 ? s1 : s0).mod(p);
+            // send M_strich_1 := (M1 + k_{s xor 1}) mod p
+            M1_dash = M1.add(s == 0 ? s1 : s0).mod(p);
+        }
+
+        com.sendTo(1, M0_dash.toString(16));
+        com.sendTo(1, M1_dash.toString(16));
+
+        // send s0, s1
+        com.sendTo(1, s0.toString(16));
+        com.sendTo(1, s1.toString(16));
+
+        // send s
+        com.sendTo(1, Integer.toString(s));
+
     }
 
     /** This is Bob. */
