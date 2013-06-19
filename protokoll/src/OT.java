@@ -79,9 +79,9 @@ public final class OT implements Protocol
         } while (k.compareTo(p) >= 0);
         
         //send q:= (crypt(k) + m_b) mod p^2
-        //ElGamalCipher elgamal = new ElGamalCipher(p,g,y);
-        
-        //com.sendTo(0, y_b.toString()); TODO:implement
+        ElGamalCipher elgamal = new ElGamalCipher(p,g,y);
+        BigInteger q = elgamal.encipherBlock(k).add(m[b.intValue()]).mod(p.pow(2));
+        com.sendTo(0, q.toString());
         
         //receive M_strich_0, M_strich_1
         BigInteger[] M_strich= new BigInteger[2];
