@@ -80,9 +80,9 @@ public final class OT implements Protocol
             BigInteger k0, k1; {
 
                 // k0 = decipher((q-m0) mod p)
-                k0 = elGamalC_a.decipherBlock(q.subtract(m0).mod(p));
+                k0 = elGamalC_a.decipherBlock(q.subtract(m0).mod(p.pow(2)));
                 // k1 = decipher((q-m1) mod p)
-                k1 = elGamalC_a.decipherBlock(q.subtract(m1).mod(p));
+                k1 = elGamalC_a.decipherBlock(q.subtract(m1).mod(p.pow(2)));
             }
 
             //S0 = sign(k0)
