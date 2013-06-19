@@ -163,8 +163,6 @@ public final class OT implements Protocol
         BigInteger[] M_strich= new BigInteger[2];
         M_strich[0] = new BigInteger(com.receive(), 16);
         M_strich[1] = new BigInteger(com.receive(), 16);
-        System.out.println("M0'=" + M_strich[0]);
-        System.out.println("M1'=" + M_strich[1]);
         System.out.println("M0'=" + M_strich[0].toString(16));
         System.out.println("M1'=" + M_strich[1].toString(16));
 
@@ -173,8 +171,6 @@ public final class OT implements Protocol
         BigInteger[] S= new BigInteger[2];
         S[0] = new BigInteger(com.receive(), 16);
         S[1] = new BigInteger(com.receive(), 16);
-        System.out.println("S0'=" + S[0]);
-        System.out.println("S1'=" + S[1]);
         System.out.println("S0=" + S[0].toString(16));
         System.out.println("S1=" + S[1].toString(16));
 
@@ -184,15 +180,12 @@ public final class OT implements Protocol
         System.out.println("s'=" + s);
         
         //compute M_{s ^ b} := M_strich_{s ^ b} - k
-        BigInteger M_sb = M_strich[s.xor(b).intValue()].subtract(k).mod(p);
         BigInteger M_sb = M_strich[s.xor(b).intValue()].mod(p).subtract(k).mod(p);
         
         //compute k_quer := M_strich_{s ^ b ^ 1} - M_{s ^ b}
         BigInteger k_quer = M_strich[s.xor(b).xor(ONE).intValue()].subtract(M_sb).mod(p);
         BigInteger k_quer2 = M_strich[s.xor(b).intValue()].subtract(M_sb).mod(p);
 
-        System.out.println("k_quer'=" + k_quer);
-        System.out.println("k_quer'=" + k_quer2);
         System.out.println("k_quer=" + k_quer);
         System.out.println("k_quer2=" + k_quer2);
         
