@@ -88,7 +88,6 @@ public final class OT implements Protocol
             s0 = elGamalS_a.signBlock(k0);
             //S1 = sign(k1)
             s1 = elGamalS_a.signBlock(k1);
-
         }
 
         // select random s in {0,1}
@@ -121,14 +120,14 @@ public final class OT implements Protocol
     /** This is Bob. */
     public void receiveFirst () {
         //receive p,g,y
-        BigInteger p = new BigInteger(com.receive());
-        BigInteger g = new BigInteger(com.receive());
-        BigInteger y = new BigInteger(com.receive());
+        BigInteger p = new BigInteger(com.receive(),16);
+        BigInteger g = new BigInteger(com.receive(),16);
+        BigInteger y = new BigInteger(com.receive(),16);
 
         //receive m0,m1
         BigInteger[] m= new BigInteger[2];
-        m[0] = new BigInteger(com.receive());
-        m[1] = new BigInteger(com.receive());
+        m[0] = new BigInteger(com.receive(), 16);
+        m[1] = new BigInteger(com.receive(), 16);
 
         //select random b in {0,1}
         BigInteger b = new BigInteger(1, new Random());
@@ -146,16 +145,16 @@ public final class OT implements Protocol
         
         //receive M_strich_0, M_strich_1
         BigInteger[] M_strich= new BigInteger[2];
-        M_strich[0] = new BigInteger(com.receive());
+        M_strich[0] = new BigInteger(com.receive(), 16);
         M_strich[1] = new BigInteger(com.receive());
         
         //receive S0,S1
         BigInteger[] S= new BigInteger[2];
-        S[0] = new BigInteger(com.receive());
-        S[1] = new BigInteger(com.receive());
+        S[0] = new BigInteger(com.receive(), 16);
+        S[1] = new BigInteger(com.receive(), 16);
         
         //receive s
-        BigInteger s = new BigInteger(com.receive());
+        BigInteger s = new BigInteger(com.receive(), 16);
         
         //compute M_{s ^ b} := M_strich_{s ^ b} - k
         BigInteger M_sb = M_strich[s.xor(b).intValue()].subtract(k);
