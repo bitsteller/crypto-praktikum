@@ -112,18 +112,6 @@ public final class OT implements Protocol
         }
     }
     
-    
-//    public static BigInteger crypt(BigInteger key, BigInteger msg) {
-//
-//    }
-//
-//    public static BigInteger decrypt(BigInteger key, BigInteger msg) {
-//
-//    }
-
-    
-    
-    
     public String nameOfTheGame () {
         return NameOfTheGame;
     }
