@@ -98,7 +98,7 @@ public final class OT implements Protocol
             // read messages to be send M0, M1 (between 0 and p)
             // Hamster. A dentist. Hardcode. Steven Seagal~
             BigInteger M0 = new BigInteger("1111111111111111111111111111111111111");
-            BigInteger M1 = new BigInteger("2222222222222222222222222222222222222");
+            BigInteger M1 = new BigInteger("1111111111111111111111111111111111111");
 
             // send M_strich_0 := (M0 + k_{s xor 0}) mod p
             M0_dash = M0.add(s == 1 ? s1 : s0).mod(p);
@@ -158,13 +158,13 @@ public final class OT implements Protocol
         BigInteger s = new BigInteger(com.receive(), 16);
         
         //compute M_{s ^ b} := M_strich_{s ^ b} - k
-        BigInteger M_sb = M_strich[s.xor(b).intValue()].subtract(k);
+        BigInteger M_sb = M_strich[s.xor(b).intValue()].subtract(k).mod(p);
         
         //compute k_quer := M_strich_{s ^ b ^ 1} - M_{s ^ b}
-        BigInteger k_quer = M_strich[s.xor(b).xor(ONE).intValue()].subtract(M_sb);
+        BigInteger k_quer = M_strich[s.xor(b).xor(ONE).intValue()].subtract(M_sb).mod(p);
         
         //check S_{b ^ 1} != k_quer (otherwise: betrayed!)
-        if (S[b.xor(ONE).intValue()] == k_quer) {
+        if (S[b.xor(ONE).intValue()].equals(k_quer)) {
             System.out.println("You have been betrayed!");
         }
         else {
