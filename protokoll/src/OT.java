@@ -83,8 +83,10 @@ public final class OT implements Protocol
 
                 // k0 = decipher((q-m0) mod p)
                 k0 = elGamalC_a.decipherBlock(q.subtract(m0).mod(p.pow(2)));
+                //k0 = (q.subtract(m0).mod(p)); //without elgamal
                 // k1 = decipher((q-m1) mod p)
                 k1 = elGamalC_a.decipherBlock(q.subtract(m1).mod(p.pow(2)));
+                //k1 = (q.subtract(m1).mod(p)); //without elgamal
             }
 
             System.out.println("k0'" + k0.toString(16));
@@ -143,21 +145,23 @@ public final class OT implements Protocol
 
         //select random b in {0,1}
         BigInteger b = new BigInteger(1, new Random());
-        System.out.println("b=" + b);
+        System.out.println("b=" + b.toString(16));
         
         //select random k between 0 and p
         BigInteger k;
         do {
             k = new BigInteger(p.bitLength(), new Random());
         } while (k.compareTo(p) >= 0);
-        System.out.println("k=" + k);
+        System.out.println("k=" + k.toString(16));
 
         
         //send q:= (crypt(k) + m_b) mod p^2
         ElGamalCipher elgamal = new ElGamalCipher(p,g,y);
         BigInteger q = elgamal.encipherBlock(k).add(m[b.intValue()]).mod(p.pow(2));
-        System.out.println("q=" + q);
-        com.sendTo(0, q.toString());
+        //BigInteger q = k.add(m[b.intValue()]).mod(p); // without elgamal for debugging
+
+        System.out.println("q=" + q.toString(16));
+        com.sendTo(0, q.toString(16));
         
         //receive M_strich_0, M_strich_1
         BigInteger[] M_strich= new BigInteger[2];
@@ -177,7 +181,7 @@ public final class OT implements Protocol
         
         //receive s
         BigInteger s = new BigInteger(com.receive(), 16);
-        System.out.println("s'=" + s);
+        System.out.println("s'=" + s.toString(16));
         
         //compute M_{s ^ b} := M_strich_{s ^ b} - k
         BigInteger M_sb = M_strich[s.xor(b).intValue()].mod(p).subtract(k).mod(p);
@@ -186,8 +190,8 @@ public final class OT implements Protocol
         BigInteger k_quer = M_strich[s.xor(b).xor(ONE).intValue()].subtract(M_sb).mod(p);
         BigInteger k_quer2 = M_strich[s.xor(b).intValue()].subtract(M_sb).mod(p);
 
-        System.out.println("k_quer=" + k_quer);
-        System.out.println("k_quer2=" + k_quer2);
+        System.out.println("k_quer=" + k_quer.toString(16));
+        System.out.println("k_quer2=" + k_quer2.toString(16));
         
         //check S_{b ^ 1} != k_quer (otherwise: betrayed!)
         ElGamalSignature sign = new ElGamalSignature(p,q,y);
