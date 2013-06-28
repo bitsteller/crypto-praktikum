@@ -39,17 +39,6 @@ public final class SecretSharing implements Protocol
     // alice: shareSecret("asdf", 5, true);
     // bob: shareSecret("fdsa", 5, false);
 
-    public static BigInteger shareSecret(Communicator com, int k, BigInteger M, boolean sendFirst) {
-
-        k = Math.pow(2, k);
-
-        while(M.bitLength() > 0) {
-            for(int i = 0; i < k; i++) {
-            }
-        }
-
-    }
-
     static Random rand = new Random();
     static boolean debug = true;
 
@@ -64,6 +53,7 @@ public final class SecretSharing implements Protocol
                 System.out.println("word " + i + ": " + ret[i].toString(36));
             }
         }
+        return ret;
     }
 
     ElGamalCipher elGamalC_own;
@@ -295,23 +285,47 @@ public final class SecretSharing implements Protocol
             otSend(words_a[i+0], words_a[i+1]);
         }
 
-        // Receive bob's n/2 words.
+        // Receive bob's n/2 words using 1-2 OT
         for(int i = 0; i < n; i += 2) {
             words_b[i] = otReceive();
         }
 
-        // Words we're going to receive
-        BigInteger[] words_c = new BigInteger[n];
+        
+//        // Words we're going to receive
+//        SecretReceive[] secretsReceive = new SecretReceive[n];
+//        for (int i = 0; i < n; i++) {
+//            secretsReceive[i] = new SecretsReceive(k); //TODO: check constructor
+//        }
+//        
+//        // Our secrets to send
+//        SecretSend[] sectretsSend = new SecretSend[n];
+//        for (int i = 0; i < n; i++) {
+//            secretsSend[i] = new SecretsReceive(words_a[i], k); //TODO: check constructor
+//        }
+//        
+//        while  { //prefix len <= bitLen
+//            //send secret parts
+//            for (int i = 0; i < (int)Math.pow(2, k); i++) {
+//                com.sendTo(1, secretsSend[i].y().toString(16));
+//            }
+//            for (int i = 0; i < n; i++) {
+//                secretsSend[i].nextRound();
+//            }
+//            
+//            //receive secret parts
 
-        // ...
-
-        for(int i = 0; i < n; i += 2) {
-
-            if(words_c[i].equals(words_b[i]) || words_c[i+1].equals(words_b[i])) {
-                System.err.println("Error!");
-            }
-
-        }
+            
+//        }
+        
+        
+        
+//        for(int i = 0; i < n; i += 2) {
+//
+//            if(words_c[i].equals(words_b[i]) || words_c[i+1].equals(words_b[i])) {
+//                System.err.println("Error!");
+//            }
+//
+//        }
 
 
     }
