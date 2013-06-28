@@ -215,13 +215,15 @@ public final class SecretSharing implements Protocol
         BigInteger k_quer2 = M_strich[s.xor(b).intValue()].subtract(M_sb).mod(p);
 
         if(elGamalS_other.verifyBlock(k_quer, S[b.xor(ONE).intValue()])) {
-            System.out.println("KNAVE! MASQUERADER! CHARLATAN!");
+            System.err.println("KNAVE! MASQUERADER! CHARLATAN!");
+            System.exit(1);
         } else {
             if (elGamalS_other.verifyBlock(k_quer2, S[b.intValue()])) {
                 // System.out.println("The signature was correct!");
             }
             else {
-                System.out.println("OT signature mismatch!");
+                System.err.println("OT signature mismatch!");
+                System.exit(1);
             }
         }
 
@@ -232,9 +234,9 @@ public final class SecretSharing implements Protocol
     /** This ia Alice. */
     public void sendFirst () {
 
-        final int n = 4; // rand.nextInt(10);
+        final int n = rand.nextInt(10)+1;
         final int n2 = n*2;
-        final int k = 3;
+        final int k = rand.nextInt(7);
         final int wordlen = 2;
         final int bitlen = (int) Math.floor(wordlen * (Math.log(36) / Math.log(2)));
 
@@ -316,7 +318,8 @@ public final class SecretSharing implements Protocol
 
         for(int i = 0; i < n2; i += 2) {
             if(!(secretsReceive[i].solve().equals(words_b[i/2]) || secretsReceive[i+1].solve().equals(words_b[i/2]))) {
-                System.err.println("Error!");
+                System.err.println("OT and tarnsfer secret mistmatch!");
+                System.exit(1);
             }
         }
 
