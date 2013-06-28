@@ -39,6 +39,12 @@ public final class OT implements Protocol
     /** This ia Alice. */
     public void sendFirst () {
 
+        boolean betray = true;
+
+        if(betray) {
+            System.out.println("betrayal incoming!");
+        }
+
         // create ElGamal cipher
         BigInteger p;
         ElGamalCipher elGamalC_a;
@@ -108,6 +114,16 @@ public final class OT implements Protocol
             // Hamster. A dentist. Hardcode. Steven Seagal~
             BigInteger M0 = new BigInteger("1111111111111111111111111111111111111");
             BigInteger M1 = new BigInteger("2222222222222222222222222222222222222");
+            // Betrayal!
+            if(betray) {
+                // Send the same message twice
+                M0 = M1;
+                // And forge one signature
+                if(new Random().nextBoolean())
+                    s0 = elGamalS_a.signBlock(new BigInteger(512, new Random()));
+                else
+                    s1 = elGamalS_a.signBlock(new BigInteger(512, new Random()));
+            }
 
             // send M_strich_0 := (M0 + k_{s xor 0}) mod p
             M0_dash = M0.add(s == 1 ? k1 : k0).mod(p);
