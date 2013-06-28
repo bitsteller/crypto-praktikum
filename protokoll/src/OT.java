@@ -194,8 +194,8 @@ public final class OT implements Protocol
         System.out.println("k_quer2=" + k_quer2.toString(16));
         
         //check S_{b ^ 1} != k_quer (otherwise: betrayed!)
-        ElGamalSignature sign = new ElGamalSignature(p,q,y);
-        
+        ElGamalSignature sign = new ElGamalSignature(p,g,y);
+
         if (sign.verifyBlock(k_quer, S[b.xor(ONE).intValue()])) {
             System.out.println("You have been betrayed!");
         }
