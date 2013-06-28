@@ -106,9 +106,9 @@ public final class SecretSharing implements Protocol
                 elGamalS_other = new ElGamalSignature(p, g, y);
             }
 
-            com.sendTo(1, p.toString(16));
-            com.sendTo(1, elGamalC_own.g.toString(16));
-            com.sendTo(1, elGamalC_own.y.toString(16));
+            com.sendTo(0, p.toString(16));
+            com.sendTo(0, elGamalC_own.g.toString(16));
+            com.sendTo(0, elGamalC_own.y.toString(16));
         }
 
     }
@@ -333,6 +333,11 @@ public final class SecretSharing implements Protocol
                 System.err.println("Error!");
             }
         }
+        
+        System.out.println("Received secrets:");
+        for (int j = 0; j < n; j++) {
+            System.out.println("Secret " + j + ": " + secretsReceive[j].solve());
+        }
     }
 
     /** This is Bob. */
@@ -385,7 +390,7 @@ public final class SecretSharing implements Protocol
                 
                 //send secret parts
                 for (int j = 0; i < n; j++) {
-                    com.sendTo(1, Integer.toString(secretsSend[j].y(),16));
+                    com.sendTo(0, Integer.toString(secretsSend[j].y(),16));
                 }
             }
             
@@ -400,7 +405,7 @@ public final class SecretSharing implements Protocol
         for (int i = 0; i < (int)Math.pow(2, k) - 1; i++) {
             for (int j = 0; i < n; j++) { 
                 secretsReceive[j].notY(Integer.parseInt(com.receive(),16));
-                com.sendTo(1, Integer.toString(secretsSend[j].y(),16));
+                com.sendTo(0, Integer.toString(secretsSend[j].y(),16));
             }
         }
         
@@ -408,6 +413,11 @@ public final class SecretSharing implements Protocol
             if(!(secretsReceive[i].solve().equals(words_b[i]) || secretsReceive[i+1].solve().equals(words_b[i]))) {
                 System.err.println("Error!");
             }
+        }
+        
+        System.out.println("Received secrets:");
+        for (int j = 0; j < n; j++) {
+            System.out.println("Secret " + j + ": " + secretsReceive[j].solve());
         }
     }
     
