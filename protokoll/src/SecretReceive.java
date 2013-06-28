@@ -3,17 +3,14 @@ import java.math.*;
 
 class SecretReceive {
 
-    final int bitlen;
-
     // The current prefix length
     int k;
 
     // Arrr!
     BigInteger[] arr;
 
-    public SecretReceive(int k, int bitlen) {
+    public SecretReceive(int k) {
         this.k = k;
-        this.bitlen = bitlen;
 
         arr = new BigInteger[(int) Math.pow(2, k+1)];
         for(int i = 0; i < arr.length; i++)
