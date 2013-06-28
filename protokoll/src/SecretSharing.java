@@ -110,7 +110,7 @@ public final class SecretSharing implements Protocol
 
     }
 
-    public void otSend(BigInteger M0, BigInteger M1) {
+    public void otSend(int to, BigInteger M0, BigInteger M1) {
 
         assert(elGamalC_own != null && elGamalS_own != null);
         assert(elGamalC_other != null && elGamalS_other != null);
@@ -125,8 +125,8 @@ public final class SecretSharing implements Protocol
         }
 
         // send both
-        com.sendTo(1, m0.toString(16));
-        com.sendTo(1, m1.toString(16));
+        com.sendTo(to, m0.toString(16));
+        com.sendTo(to, m1.toString(16));
 
         // receive q
         BigInteger q = new BigInteger(com.receive(), 16);
@@ -145,17 +145,10 @@ public final class SecretSharing implements Protocol
                 //k1 = (q.subtract(m1).mod(p)); //without elgamal
             }
 
-            System.out.println("k0'" + k0.toString(16));
-            System.out.println("k1'" + k1.toString(16));
-
             //S0 = sign(k0)
             s0 = elGamalS_own.signBlock(k0);
             //S1 = sign(k1)
             s1 = elGamalS_own.signBlock(k1);
-
-            System.out.println("s0'" + s0.toString(16));
-            System.out.println("s1'" + s1.toString(16));
-
 
             // select random s in {0,1}
             s = new Random().nextBoolean() ? 1 : 0;
@@ -165,24 +158,21 @@ public final class SecretSharing implements Protocol
             // send M_strich_1 := (M1 + k_{s xor 1}) mod p
             M1_dash = M1.add(s == 0 ? k1 : k0).mod(p);
 
-            System.out.println("M0'" + M0_dash.toString(16));
-            System.out.println("M1'" + M1_dash.toString(16));
-
         }
 
-        com.sendTo(1, M0_dash.toString(16));
-        com.sendTo(1, M1_dash.toString(16));
+        com.sendTo(to, M0_dash.toString(16));
+        com.sendTo(to, M1_dash.toString(16));
 
         // send s0, s1
-        com.sendTo(1, s0.toString(16));
-        com.sendTo(1, s1.toString(16));
+        com.sendTo(to, s0.toString(16));
+        com.sendTo(to, s1.toString(16));
 
         // send s
-        com.sendTo(1, Integer.toString(s));
+        com.sendTo(to, Integer.toString(s));
 
     }
 
-    public BigInteger otReceive() {
+    public BigInteger otReceive(int to) {
 
         //receive m0,m1
         BigInteger[] m= new BigInteger[2];
@@ -191,42 +181,31 @@ public final class SecretSharing implements Protocol
 
         //select random b in {0,1}
         BigInteger b = new BigInteger(1, new Random());
-        System.out.println("b=" + b.toString(16));
 
         //select random k between 0 and p
         BigInteger k;
         do {
             k = new BigInteger(p.bitLength(), new Random());
         } while (k.compareTo(p) >= 0);
-        System.out.println("k=" + k.toString(16));
-
 
         //send q:= (crypt(k) + m_b) mod p^2
         BigInteger q = elGamalC_other.encipherBlock(k).add(m[b.intValue()]).mod(p.pow(2));
         //BigInteger q = k.add(m[b.intValue()]).mod(p); // without elgamal for debugging
 
-        System.out.println("q=" + q.toString(16));
-        com.sendTo(0, q.toString(16));
+        com.sendTo(to, q.toString(16));
 
         //receive M_strich_0, M_strich_1
         BigInteger[] M_strich= new BigInteger[2];
         M_strich[0] = new BigInteger(com.receive(), 16);
         M_strich[1] = new BigInteger(com.receive(), 16);
-        System.out.println("M0'=" + M_strich[0].toString(16));
-        System.out.println("M1'=" + M_strich[1].toString(16));
-
 
         //receive S0,S1
         BigInteger[] S= new BigInteger[2];
         S[0] = new BigInteger(com.receive(), 16);
         S[1] = new BigInteger(com.receive(), 16);
-        System.out.println("S0=" + S[0].toString(16));
-        System.out.println("S1=" + S[1].toString(16));
-
 
         //receive s
         BigInteger s = new BigInteger(com.receive(), 16);
-        System.out.println("s'=" + s.toString(16));
 
         //compute M_{s ^ b} := M_strich_{s ^ b} - k
         BigInteger M_sb = M_strich[s.xor(b).intValue()].mod(p).subtract(k).mod(p);
@@ -235,21 +214,14 @@ public final class SecretSharing implements Protocol
         BigInteger k_quer = M_strich[s.xor(b).xor(ONE).intValue()].subtract(M_sb).mod(p);
         BigInteger k_quer2 = M_strich[s.xor(b).intValue()].subtract(M_sb).mod(p);
 
-        System.out.println("k_quer=" + k_quer.toString(16));
-        System.out.println("k_quer2=" + k_quer2.toString(16));
-
-        if (elGamalS_other.verifyBlock(k_quer, S[b.xor(ONE).intValue()])) {
-            System.out.println("You have been betrayed!");
-        }
-        else {
-            System.out.println("Congratulations! With a probability of 1/2 you were not betrayed!");
-            System.out.println("The received secret is: " + M_sb.toString(16));
-
+        if(elGamalS_other.verifyBlock(k_quer, S[b.xor(ONE).intValue()])) {
+            System.out.println("KNAVE! MASQUERADER! CHARLATAN!");
+        } else {
             if (elGamalS_other.verifyBlock(k_quer2, S[b.intValue()])) {
-                System.out.println("The signature was correct!");
+                // System.out.println("The signature was correct!");
             }
             else {
-                System.out.println("But the signature is wrong.");
+                System.out.println("OT signature mismatch!");
             }
         }
 
@@ -280,15 +252,15 @@ public final class SecretSharing implements Protocol
 
         // Send one of each secret pairs out of 10 secrets (but we don't know which, pairwise)
         for(int i = 0; i < n*2; i += 2) {
-            // otSend(words_a[i+0], words_a[i+1]);
-            com.sendTo(1, words_a[i + (rand.nextBoolean() ? 0 : 1)].toString(16));
+            otSend(1, words_a[i+0], words_a[i+1]);
+            // com.sendTo(1, words_a[i + (rand.nextBoolean() ? 0 : 1)].toString(16));
         }
 
         // Receive bob's n/2 words using 1-2 OT
         for(int i = 0; i < n; i++) {
-            // words_b[i] = otReceive();
-            String str = com.receive();
-            words_b[i] = new BigInteger(str, 16);
+            words_b[i] = otReceive(1);
+            // String str = com.receive();
+            // words_b[i] = new BigInteger(str, 16);
         }
 
         com.sendTo(1, "ot check.");
@@ -375,14 +347,14 @@ public final class SecretSharing implements Protocol
 
         // Receive bob's n/2 words using 1-2 OT
         for(int i = 0; i < n; i++) {
-            // words_b[i] = otReceive();
-            words_b[i] = new BigInteger(com.receive(), 16);
+            words_b[i] = otReceive(0);
+            // words_b[i] = new BigInteger(com.receive(), 16);
         }
 
         // Send one of each secret pairs out of 10 secrets (but we don't know which, pairwise)
         for(int i = 0; i < n*2; i += 2) {
-            // otSend(words_a[i+0], words_a[i+1]);
-            com.sendTo(0, words_a[i + (rand.nextBoolean() ? 0 : 1)].toString(16));
+            otSend(0, words_a[i+0], words_a[i+1]);
+            // com.sendTo(0, words_a[i + (rand.nextBoolean() ? 0 : 1)].toString(16));
         }
 
         // There should be a checkpoint here.
