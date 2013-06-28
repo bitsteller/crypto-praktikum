@@ -6,8 +6,6 @@ class SecretSend {
     // We use random values here and there...
     private static final Random rand = new Random();
 
-    final int bitlen;
-
     // The initial prefix length.
     final int k, twoToK;
     // The current prefix length.
@@ -26,10 +24,9 @@ class SecretSend {
     // Word. To check against.
     BigInteger word;
 
-    public SecretSend(BigInteger word, int k, int bitlen) {
+    public SecretSend(BigInteger word, int k) {
         this.k2 = this.k = k;
         this.twoToK = (int) Math.pow(2, k);
-        this.bitlen = bitlen;
         this.word = word;
 
         this.counter = 0;
@@ -118,6 +115,10 @@ class SecretSend {
 
         assert(false) : "Tried to get y with empty backing array (ie, only prefix left)!";
         return 0;
+    }
+
+    public int getCurrentBitLength() {
+        return k2;
     }
 
 }
