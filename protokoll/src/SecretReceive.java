@@ -69,9 +69,10 @@ class SecretReceive {
         System.out.println();
 
         int bitlen = secwet.bitLength();
+        bitlen += 3;
         int k = 3, k2 = 3;
 
-        SecretSend s = new SecretSend(secwet, k);
+        SecretSend s = new SecretSend(secwet, k, bitlen);
         SecretReceive r = new SecretReceive(k);
 
         while(true) {
@@ -123,6 +124,17 @@ class SecretReceive {
         System.out.println();
         System.out.println("done! last element left: " + r.solve().toString(2));
 
+    }
+
+    public void debug() {
+        System.out.print("receive: ");
+        for(int i = 0; i < arr.length; i++) {
+            if(arr[i] == null)
+                System.out.print("NULL, ");
+            else
+                System.out.print(arr[i].toString(2) + ", ");
+        }
+        System.out.println();
     }
 
 }

@@ -7,7 +7,7 @@ class SecretSend {
     private static final Random rand = new Random();
 
     // The initial prefix length.
-    final int k, twoToK;
+    final int k, twoToK, bitlen;
     // The current prefix length.
     int k2;
 
@@ -24,15 +24,18 @@ class SecretSend {
     // Word. To check against.
     BigInteger word;
 
-    public SecretSend(BigInteger word, int k) {
+    public SecretSend(BigInteger word, int k, int bitlen) {
         this.k2 = this.k = k;
         this.twoToK = (int) Math.pow(2, k);
         this.word = word;
+        this.bitlen = bitlen;
 
         this.counter = 0;
 
+        assert(bitlen >= word.bitLength()) : "Word length is bigger than specified bitlen!";
+
         arr = new BigInteger[(int) Math.pow(2, k+1)];
-        BigInteger prefix = word.shiftRight(word.bitLength()-k2);
+        BigInteger prefix = word.shiftRight(bitlen-k2);
         cur = -1;
         for(int i = 0; i < arr.length; i++) {
             arr[i] = BigInteger.valueOf(i);
@@ -56,7 +59,7 @@ class SecretSend {
         this.cur = -1;
 
         // The prefix to check against for the new value of cur.
-        BigInteger prefix = word.shiftRight(word.bitLength()-k2);
+        BigInteger prefix = word.shiftRight(bitlen-k2);
 
         BigInteger[] arr2 = new BigInteger[arr.length];
         int j = 0;
@@ -119,6 +122,21 @@ class SecretSend {
 
     public int getCurrentBitLength() {
         return k2;
+    }
+
+    public void debug() {
+        System.out.print("send: ");
+        for(int i = 0; i < arr.length; i++) {
+            if(arr[i] == null)
+                System.out.print("NULL, ");
+            else {
+                if(cur == i)
+                    System.out.print("[" + arr[i].toString(2) + "], ");
+                else
+                    System.out.print(arr[i].toString(2) + ", ");
+            }
+        }
+        System.out.println();
     }
 
 }

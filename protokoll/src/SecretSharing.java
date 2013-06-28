@@ -40,7 +40,6 @@ public final class SecretSharing implements Protocol
     // bob: shareSecret("fdsa", 5, false);
 
     static Random rand = new Random();
-    static boolean debug = true;
 
     public static BigInteger[] genRandomWords(int n, int l) {
         BigInteger[] ret = new BigInteger[n];
@@ -48,10 +47,8 @@ public final class SecretSharing implements Protocol
             ret[i] = new BigInteger(l, rand);
         }
 
-        if(debug) {
-            for(int i = 0; i < n; i++) {
-                System.out.println("word " + i + ": " + ret[i].toString(36));
-            }
+        for(int i = 0; i < n; i++) {
+            System.out.println("word " + i + ": " + ret[i].toString(36));
         }
         return ret;
     }
@@ -246,7 +243,7 @@ public final class SecretSharing implements Protocol
         }
         else {
             System.out.println("Congratulations! With a probability of 1/2 you were not betrayed!");
-            System.out.println("The received secret is: " + M_sb);
+            System.out.println("The received secret is: " + M_sb.toString(16));
 
             if (elGamalS_other.verifyBlock(k_quer2, S[b.intValue()])) {
                 System.out.println("The signature was correct!");
@@ -262,158 +259,191 @@ public final class SecretSharing implements Protocol
 
     /** This ia Alice. */
     public void sendFirst () {
-        boolean betray = true;
 
-        if(betray) {
-            System.out.println("betrayal incoming!");
-        }
+        final int n = 4; // rand.nextInt(10);
+        final int n2 = n*2;
+        final int k = 3;
+        final int wordlen = 2;
+        final int bitlen = (int) Math.floor(wordlen * (Math.log(36) / Math.log(2)));
 
-        int n = rand.nextInt(10);
-        int k = rand.nextInt(10);
-        int wordlen = 4;
-        int bitlen = (int) Math.ceil(wordlen * (Math.log(36) / Math.log(2)));
+        com.sendTo(1, Integer.toString(n, 16));
+        com.sendTo(1, Integer.toString(k, 16));
+        com.sendTo(1, Integer.toString(wordlen, 16));
 
         // generate n random words
         BigInteger[] words_a = SecretSharing.genRandomWords(n*2, bitlen);
-        BigInteger[] words_b = new BigInteger[n/2];
+        BigInteger[] words_b = new BigInteger[n];
 
         tradeElGamal(true);
 
-        // Send 5 out of 10 secrets (but we don't know which, pairwise)
-        for(int i = 0; i < n; i += 2) {
-            otSend(words_a[i+0], words_a[i+1]);
+        com.sendTo(1, "elgamal check.");
+
+        // Send one of each secret pairs out of 10 secrets (but we don't know which, pairwise)
+        for(int i = 0; i < n*2; i += 2) {
+            // otSend(words_a[i+0], words_a[i+1]);
+            com.sendTo(1, words_a[i + (rand.nextBoolean() ? 0 : 1)].toString(16));
         }
 
         // Receive bob's n/2 words using 1-2 OT
-        for(int i = 0; i < n; i += 2) {
-            words_b[i] = otReceive();
+        for(int i = 0; i < n; i++) {
+            // words_b[i] = otReceive();
+            String str = com.receive();
+            words_b[i] = new BigInteger(str, 16);
         }
 
+        com.sendTo(1, "ot check.");
+
         // Secrets to send and receive
-        SecretReceive[] secretsReceive = new SecretReceive[n];
-        SecretSend[] secretsSend = new SecretSend[n];
-        for (int i = 0; i < n; i++) {
-            secretsSend[i] = new SecretSend(words_a[i], k);
+        SecretReceive[] secretsReceive = new SecretReceive[n2];
+        SecretSend[] secretsSend = new SecretSend[n2];
+        for (int i = 0; i < n2; i++) {
+            secretsSend[i] = new SecretSend(words_a[i], k, bitlen);
             secretsReceive[i] = new SecretReceive(k);
         }
 
-        while (secretsSend[0].getCurrentBitLength() <= bitlen) { // Assuming that all secrets have equal length
+        int k2 = k;
+        while(true) { // Assuming that all secrets have equal length
+
             for (int i = 0; i < (int)Math.pow(2, k); i++) {
-                //send secret parts
-                for (int j = 0; i < n; j++) {
-                    com.sendTo(1, Integer.toString(secretsSend[j].y(),16));
+                // send secret parts
+                for (int j = 0; j < n2; j++) {
+                    int y = secretsSend[j].y();
+                    com.sendTo(1, Integer.toString(y, 16));
                 }
-                //receive secret parts
-                for (int j = 0; j < n; j++) {
-                    secretsReceive[j].notY(Integer.parseInt(com.receive(),16));
+                // receive secret parts
+                for (int j = 0; j < n2; j++) {
+                    int y = Integer.parseInt(com.receive(), 16);
+                    secretsReceive[j].notY(y);
                 }
             }
 
-            //expand all prefixes
-            for (int j = 0; j < n; j++) {
+            if(k2 == bitlen)
+                break;
+
+            // expand all prefixes
+            for (int j = 0; j < n2; j++) {
                 secretsSend[j].nextRound();
                 secretsReceive[j].nextRound();
             }
+
+            // Output some progress
+            System.out.println(k2 + " / " + bitlen);
+
+            k2 += 1;
         }
 
-        //now 2^k possiblities should be left for each secret. lets exclude the 2^k - 1 remaining ones
-        for (int i = 0; i < (int)Math.pow(2, k) - 1; i++) {
-            for (int j = 0; i < n; j++) {
-                com.sendTo(1, Integer.toString(secretsSend[j].y(),16));
-                secretsReceive[j].notY(Integer.parseInt(com.receive(),16));
+        com.sendTo(1, "2^k check.");
+
+        // Now 2^k possiblities should be left for each secret. lets exclude the 2^k - 1 remaining ones
+        for (int i = 0; i < (int)Math.pow(2, k) -1; i++) {
+            for (int j = 0; j < n2; j++) {
+                com.sendTo(1, Integer.toString(secretsSend[j].yOverride(), 16));
+                secretsReceive[j].notY(Integer.parseInt(com.receive(), 16));
             }
         }
 
-        for(int i = 0; i < n; i += 2) {
-            if(!(secretsReceive[i].solve().equals(words_b[i]) || secretsReceive[i+1].solve().equals(words_b[i]))) {
+        for(int i = 0; i < n2; i += 2) {
+            if(!(secretsReceive[i].solve().equals(words_b[i/2]) || secretsReceive[i+1].solve().equals(words_b[i/2]))) {
                 System.err.println("Error!");
             }
         }
-        
+
         System.out.println("Received secrets:");
-        for (int j = 0; j < n; j++) {
-            System.out.println("Secret " + j + ": " + secretsReceive[j].solve());
+        for (int j = 0; j < n2; j++) {
+            System.out.println("Secret " + j + ": " + secretsReceive[j].solve().toString(36));
         }
     }
 
     /** This is Bob. */
     public void receiveFirst () {
-        boolean betray = true;
 
-        if(betray) {
-            System.out.println("betrayal incoming!");
+        final int n, n2, k, wordlen, bitlen; {
+            n = Integer.valueOf(com.receive(), 16);
+            n2 = n*2;
+            k = Integer.valueOf(com.receive(), 16);
+            wordlen = Integer.valueOf(com.receive(), 16);
+            bitlen = (int) Math.floor(wordlen * (Math.log(36) / Math.log(2)));
         }
-
-        int n = rand.nextInt(10);
-        int k = rand.nextInt(10);
-        int wordlen = 4;
-        int bitlen = (int) Math.ceil(wordlen * (Math.log(36) / Math.log(2)));
 
         // generate n random words
         BigInteger[] words_a = SecretSharing.genRandomWords(n*2, bitlen);
-        BigInteger[] words_b = new BigInteger[n/2];
+        BigInteger[] words_b = new BigInteger[n];
 
-        tradeElGamal(true);
+        tradeElGamal(false);
+
+        System.out.println(com.receive());
 
         // Receive bob's n/2 words using 1-2 OT
-        for(int i = 0; i < n; i += 2) {
-            words_b[i] = otReceive();
+        for(int i = 0; i < n; i++) {
+            // words_b[i] = otReceive();
+            words_b[i] = new BigInteger(com.receive(), 16);
         }
 
-        // Send 5 out of 10 secrets (but we don't know which, pairwise)
-        for(int i = 0; i < n; i += 2) {
-            otSend(words_a[i+0], words_a[i+1]);
+        // Send one of each secret pairs out of 10 secrets (but we don't know which, pairwise)
+        for(int i = 0; i < n*2; i += 2) {
+            // otSend(words_a[i+0], words_a[i+1]);
+            com.sendTo(0, words_a[i + (rand.nextBoolean() ? 0 : 1)].toString(16));
         }
+
+        // There should be a checkpoint here.
+        System.out.println(com.receive());
 
         // Words we're going to receive
-        SecretReceive[] secretsReceive = new SecretReceive[n];
-        for (int i = 0; i < n; i++) {
+        SecretReceive[] secretsReceive = new SecretReceive[n2];
+        SecretSend[] secretsSend = new SecretSend[n2];
+        for (int i = 0; i < n2; i++) {
             secretsReceive[i] = new SecretReceive(k);
+            secretsSend[i] = new SecretSend(words_a[i], k, bitlen);
         }
 
-        // Our secrets to send
-        SecretSend[] secretsSend = new SecretSend[n];
-        for (int i = 0; i < n; i++) {
-            secretsSend[i] = new SecretSend(words_a[i], k);
-        }
+        int k2 = k;
+        while(true) { // Assuming that all secrets have equal length
 
-        while (secretsSend[0].getCurrentBitLength() <= bitlen) { //Assuming that all secrets have equal length
             for (int i = 0; i < (int)Math.pow(2, k); i++) {
-                //receive secret parts
-                for (int j = 0; j < n; j++) {
-                    secretsReceive[j].notY(Integer.parseInt(com.receive(),16));
+                // receive secret parts
+                for (int j = 0; j < n2; j++) {
+                    int y = Integer.parseInt(com.receive(), 16);
+                    secretsReceive[j].notY(y);
                 }
-
-                //send secret parts
-                for (int j = 0; i < n; j++) {
-                    com.sendTo(0, Integer.toString(secretsSend[j].y(),16));
+                // send secret parts
+                for (int j = 0; j < n2; j++) {
+                    int y = secretsSend[j].y();
+                    com.sendTo(0, Integer.toString(y, 16));
                 }
             }
 
-            //expand all prefixes
-            for (int j = 0; j < n; j++) {
+            if(k2 == bitlen)
+                break;
+
+            // expand all prefixes
+            for (int j = 0; j < n2; j++) {
                 secretsSend[j].nextRound();
                 secretsReceive[j].nextRound();
             }
+
+            k2 += 1;
         }
 
-        //now 2^k possiblities should be left for each secret. lets exclude the 2^k - 1 remaining ones
+        // There should be a checkpoint here.
+        System.out.println(com.receive());
+
+        // Now 2^k possiblities should be left for each secret. lets exclude the 2^k - 1 remaining ones
         for (int i = 0; i < (int)Math.pow(2, k) - 1; i++) {
-            for (int j = 0; i < n; j++) {
-                secretsReceive[j].notY(Integer.parseInt(com.receive(),16));
-                com.sendTo(0, Integer.toString(secretsSend[j].y(),16));
+            for (int j = 0; j < n2; j++) {
+                secretsReceive[j].notY(Integer.parseInt(com.receive(), 16));
+                com.sendTo(0, Integer.toString(secretsSend[j].yOverride(), 16));
             }
         }
 
-        for(int i = 0; i < n; i += 2) {
-            if(!(secretsReceive[i].solve().equals(words_b[i]) || secretsReceive[i+1].solve().equals(words_b[i]))) {
+        for(int i = 0; i < n2; i += 2) {
+            if(!(secretsReceive[i].solve().equals(words_b[i/2]) || secretsReceive[i+1].solve().equals(words_b[i/2]))) {
                 System.err.println("Error!");
             }
         }
-        
+
         System.out.println("Received secrets:");
-        for (int j = 0; j < n; j++) {
-            System.out.println("Secret " + j + ": " + secretsReceive[j].solve());
+        for (int j = 0; j < n2; j++) {
+            System.out.println("Secret " + j + ": " + secretsReceive[j].solve().toString(36));
         }
     }
 
