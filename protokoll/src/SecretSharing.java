@@ -133,7 +133,7 @@ public final class SecretSharing implements Protocol
 
         // receive q
         BigInteger q = new BigInteger(com.receive(), 16);
-        
+
         BigInteger s0, s1;
         BigInteger M0_dash, M1_dash;
         int s; {
@@ -195,7 +195,7 @@ public final class SecretSharing implements Protocol
         //select random b in {0,1}
         BigInteger b = new BigInteger(1, new Random());
         System.out.println("b=" + b.toString(16));
-        
+
         //select random k between 0 and p
         BigInteger k;
         do {
@@ -203,14 +203,14 @@ public final class SecretSharing implements Protocol
         } while (k.compareTo(p) >= 0);
         System.out.println("k=" + k.toString(16));
 
-        
+
         //send q:= (crypt(k) + m_b) mod p^2
         BigInteger q = elGamalC_other.encipherBlock(k).add(m[b.intValue()]).mod(p.pow(2));
         //BigInteger q = k.add(m[b.intValue()]).mod(p); // without elgamal for debugging
 
         System.out.println("q=" + q.toString(16));
         com.sendTo(0, q.toString(16));
-        
+
         //receive M_strich_0, M_strich_1
         BigInteger[] M_strich= new BigInteger[2];
         M_strich[0] = new BigInteger(com.receive(), 16);
@@ -218,7 +218,7 @@ public final class SecretSharing implements Protocol
         System.out.println("M0'=" + M_strich[0].toString(16));
         System.out.println("M1'=" + M_strich[1].toString(16));
 
-        
+
         //receive S0,S1
         BigInteger[] S= new BigInteger[2];
         S[0] = new BigInteger(com.receive(), 16);
@@ -226,14 +226,14 @@ public final class SecretSharing implements Protocol
         System.out.println("S0=" + S[0].toString(16));
         System.out.println("S1=" + S[1].toString(16));
 
-        
+
         //receive s
         BigInteger s = new BigInteger(com.receive(), 16);
         System.out.println("s'=" + s.toString(16));
-        
+
         //compute M_{s ^ b} := M_strich_{s ^ b} - k
         BigInteger M_sb = M_strich[s.xor(b).intValue()].mod(p).subtract(k).mod(p);
-        
+
         //compute k_quer := M_strich_{s ^ b ^ 1} - M_{s ^ b}
         BigInteger k_quer = M_strich[s.xor(b).xor(ONE).intValue()].subtract(M_sb).mod(p);
         BigInteger k_quer2 = M_strich[s.xor(b).intValue()].subtract(M_sb).mod(p);
@@ -247,7 +247,7 @@ public final class SecretSharing implements Protocol
         else {
             System.out.println("Congratulations! With a probability of 1/2 you were not betrayed!");
             System.out.println("The received secret is: " + M_sb);
-            
+
             if (elGamalS_other.verifyBlock(k_quer2, S[b.intValue()])) {
                 System.out.println("The signature was correct!");
             }
@@ -288,20 +288,16 @@ public final class SecretSharing implements Protocol
         for(int i = 0; i < n; i += 2) {
             words_b[i] = otReceive();
         }
-        
-        // Words we're going to receive
+
+        // Secrets to send and receive
         SecretReceive[] secretsReceive = new SecretReceive[n];
-        for (int i = 0; i < n; i++) {
-            secretsReceive[i] = new SecretReceive(k);
-        }
-        
-        // Our secrets to send
         SecretSend[] secretsSend = new SecretSend[n];
         for (int i = 0; i < n; i++) {
             secretsSend[i] = new SecretSend(words_a[i], k);
+            secretsReceive[i] = new SecretReceive(k);
         }
-        
-        while (secretsSend[0].getCurrentBitLength() <= bitlen) { //Assuming that all secrets have equal length
+
+        while (secretsSend[0].getCurrentBitLength() <= bitlen) { // Assuming that all secrets have equal length
             for (int i = 0; i < (int)Math.pow(2, k); i++) {
                 //send secret parts
                 for (int j = 0; i < n; j++) {
@@ -312,22 +308,22 @@ public final class SecretSharing implements Protocol
                     secretsReceive[j].notY(Integer.parseInt(com.receive(),16));
                 }
             }
-            
+
             //expand all prefixes
             for (int j = 0; j < n; j++) {
                 secretsSend[j].nextRound();
                 secretsReceive[j].nextRound();
             }
         }
-        
+
         //now 2^k possiblities should be left for each secret. lets exclude the 2^k - 1 remaining ones
         for (int i = 0; i < (int)Math.pow(2, k) - 1; i++) {
-            for (int j = 0; i < n; j++) { 
+            for (int j = 0; i < n; j++) {
                 com.sendTo(1, Integer.toString(secretsSend[j].y(),16));
                 secretsReceive[j].notY(Integer.parseInt(com.receive(),16));
             }
         }
-        
+
         for(int i = 0; i < n; i += 2) {
             if(!(secretsReceive[i].solve().equals(words_b[i]) || secretsReceive[i+1].solve().equals(words_b[i]))) {
                 System.err.println("Error!");
@@ -363,52 +359,52 @@ public final class SecretSharing implements Protocol
         for(int i = 0; i < n; i += 2) {
             words_b[i] = otReceive();
         }
-        
+
         // Send 5 out of 10 secrets (but we don't know which, pairwise)
         for(int i = 0; i < n; i += 2) {
             otSend(words_a[i+0], words_a[i+1]);
         }
-        
+
         // Words we're going to receive
         SecretReceive[] secretsReceive = new SecretReceive[n];
         for (int i = 0; i < n; i++) {
             secretsReceive[i] = new SecretReceive(k);
         }
-        
+
         // Our secrets to send
         SecretSend[] secretsSend = new SecretSend[n];
         for (int i = 0; i < n; i++) {
             secretsSend[i] = new SecretSend(words_a[i], k);
         }
-        
+
         while (secretsSend[0].getCurrentBitLength() <= bitlen) { //Assuming that all secrets have equal length
             for (int i = 0; i < (int)Math.pow(2, k); i++) {
                 //receive secret parts
                 for (int j = 0; j < n; j++) {
                     secretsReceive[j].notY(Integer.parseInt(com.receive(),16));
                 }
-                
+
                 //send secret parts
                 for (int j = 0; i < n; j++) {
                     com.sendTo(0, Integer.toString(secretsSend[j].y(),16));
                 }
             }
-            
+
             //expand all prefixes
             for (int j = 0; j < n; j++) {
                 secretsSend[j].nextRound();
                 secretsReceive[j].nextRound();
             }
         }
-        
+
         //now 2^k possiblities should be left for each secret. lets exclude the 2^k - 1 remaining ones
         for (int i = 0; i < (int)Math.pow(2, k) - 1; i++) {
-            for (int j = 0; i < n; j++) { 
+            for (int j = 0; i < n; j++) {
                 secretsReceive[j].notY(Integer.parseInt(com.receive(),16));
                 com.sendTo(0, Integer.toString(secretsSend[j].y(),16));
             }
         }
-        
+
         for(int i = 0; i < n; i += 2) {
             if(!(secretsReceive[i].solve().equals(words_b[i]) || secretsReceive[i+1].solve().equals(words_b[i]))) {
                 System.err.println("Error!");
@@ -420,7 +416,7 @@ public final class SecretSharing implements Protocol
             System.out.println("Secret " + j + ": " + secretsReceive[j].solve());
         }
     }
-    
+
     public String nameOfTheGame () {
         return NameOfTheGame;
     }
