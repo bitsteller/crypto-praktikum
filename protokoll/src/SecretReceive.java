@@ -1,7 +1,7 @@
 import java.util.*;
 import java.math.*;
 
-class SecretSend {
+class SecretReceive {
 
     final int bitlen;
 
@@ -11,7 +11,7 @@ class SecretSend {
     // Arrr!
     BigInteger[] arr;
 
-    public SecretSend(int k, int bitlen) {
+    public SecretReceive(int k, int bitlen) {
         this.k = k;
         this.bitlen = bitlen;
 
