@@ -14,7 +14,7 @@ import java.security.MessageDigest;
  *
  */
 
-public final class OT implements Protocol
+public final class SecretSharing implements Protocol
 {
     /**
      *
@@ -36,19 +36,44 @@ public final class OT implements Protocol
         this.com = com;
     }
 
-    /** This ia Alice. */
-    public void sendFirst () {
+    // alice: shareSecret("asdf", 5, true);
+    // bob: shareSecret("fdsa", 5, false);
 
-        boolean betray = true;
+    public static BigInteger shareSecret(Communicator com, int k, BigInteger M, boolean sendFirst) {
 
-        if(betray) {
-            System.out.println("betrayal incoming!");
+        k = Math.pow(2, k);
+
+        while(M.bitLength() > 0) {
+            for(int i = 0; i < k; i++) {
+            }
         }
 
-        // create ElGamal cipher
-        BigInteger p;
-        ElGamalCipher elGamalC_a;
-        ElGamalSignature elGamalS_a;
+    }
+
+    static Random rand = new Random();
+    static boolean debug = true;
+
+    public static BigInteger[] genRandomWords(int n, int l) {
+        BigInteger[] ret = new BigInteger[n];
+        for(int i = 0; i < n; i++) {
+            ret[i] = new BigInteger(l, rand);
+        }
+
+        if(debug) {
+            for(int i = 0; i < n; i++) {
+                System.out.println("word " + i + ": " + ret[i].toString(36));
+            }
+        }
+    }
+
+    ElGamalCipher elGamalC_own;
+    ElGamalSignature elGamalS_own;
+    ElGamalCipher elGamalC_other;
+    ElGamalSignature elGamalS_other;
+    BigInteger p;
+
+    public void tradeElGamal(boolean first) {
+
         {
             // note: q is p in elgamal (too lazy to refactor that, "never touch a running system")
             // we just use a local p here, since we use it rather often anyways
@@ -56,17 +81,55 @@ public final class OT implements Protocol
             BigInteger g = new BigInteger("4403105895869798297264918950735787070665047406714785361037216842427722734684061748868589917485012596281820467352001338223691996653533143166890875549812531");
             BigInteger y = new BigInteger("3670294064109445804998782973709772470002041046377612489028768098078250713079795031354099562309432613560558383306865142781216201315104971340333690591679721");
             BigInteger x = new BigInteger("4589946301809196862611751989088793376762175950291076147544077975213763218505486754450017554342955014202444667772016113058406939298289857995054770609176615");
-            elGamalC_a = new ElGamalCipher(p, g, y, x);
-            elGamalS_a = new ElGamalSignature(p, g, y, x);
+
+            // Our own cipher
+            elGamalC_own = new ElGamalCipher(p, g, y, x);
+            elGamalS_own = new ElGamalSignature(p, g, y, x);
         }
 
-        //send public key: p, g, y
-        com.sendTo(1, p.toString(16));
-        com.sendTo(1, elGamalC_a.g.toString(16));
-        com.sendTo(1, elGamalC_a.y.toString(16));
+        if(first) {
 
-        
-        //send random m0, m1 between 0 and p. m0 != m1
+            // send public key: p, g, y
+            com.sendTo(1, p.toString(16));
+            com.sendTo(1, elGamalC_own.g.toString(16));
+            com.sendTo(1, elGamalC_own.y.toString(16));
+
+            // receive p, g, y
+            {
+                BigInteger p = new BigInteger(com.receive(),16);
+                BigInteger g = new BigInteger(com.receive(),16);
+                BigInteger y = new BigInteger(com.receive(),16);
+
+                elGamalC_other = new ElGamalCipher(p, g, y);
+                elGamalS_other = new ElGamalSignature(p, g, y);
+            }
+
+        } else {
+
+            // receive p, g, y
+            {
+                BigInteger p = new BigInteger(com.receive(),16);
+                BigInteger g = new BigInteger(com.receive(),16);
+                BigInteger y = new BigInteger(com.receive(),16);
+
+                elGamalC_other = new ElGamalCipher(p, g, y);
+                elGamalS_other = new ElGamalSignature(p, g, y);
+            }
+
+            com.sendTo(1, p.toString(16));
+            com.sendTo(1, elGamalC_own.g.toString(16));
+            com.sendTo(1, elGamalC_own.y.toString(16));
+        }
+
+    }
+
+    public void otSend(BigInteger M0, BigInteger M1) {
+
+        assert(elGamalC_own != null && elGamalS_own != null);
+        assert(elGamalC_other != null && elGamalS_other != null);
+        assert(p != null);
+
+        // send random m0, m1 between 0 and p. m0 != m1
         BigInteger m0, m1; {
             m0 = BigIntegerUtil.randomBetween(ZERO, p);
             do {
@@ -88,10 +151,10 @@ public final class OT implements Protocol
             BigInteger k0, k1; {
 
                 // k0 = decipher((q-m0) mod p)
-                k0 = elGamalC_a.decipherBlock(q.subtract(m0).mod(p.pow(2)));
+                k0 = elGamalC_own.decipherBlock(q.subtract(m0).mod(p.pow(2)));
                 //k0 = (q.subtract(m0).mod(p)); //without elgamal
                 // k1 = decipher((q-m1) mod p)
-                k1 = elGamalC_a.decipherBlock(q.subtract(m1).mod(p.pow(2)));
+                k1 = elGamalC_own.decipherBlock(q.subtract(m1).mod(p.pow(2)));
                 //k1 = (q.subtract(m1).mod(p)); //without elgamal
             }
 
@@ -99,9 +162,9 @@ public final class OT implements Protocol
             System.out.println("k1'" + k1.toString(16));
 
             //S0 = sign(k0)
-            s0 = elGamalS_a.signBlock(k0);
+            s0 = elGamalS_own.signBlock(k0);
             //S1 = sign(k1)
-            s1 = elGamalS_a.signBlock(k1);
+            s1 = elGamalS_own.signBlock(k1);
 
             System.out.println("s0'" + s0.toString(16));
             System.out.println("s1'" + s1.toString(16));
@@ -109,21 +172,6 @@ public final class OT implements Protocol
 
             // select random s in {0,1}
             s = new Random().nextBoolean() ? 1 : 0;
-
-            // read messages to be send M0, M1 (between 0 and p)
-            // Hamster. A dentist. Hardcode. Steven Seagal~
-            BigInteger M0 = new BigInteger("1111111111111111111111111111111111111");
-            BigInteger M1 = new BigInteger("2222222222222222222222222222222222222");
-            // Betrayal!
-            if(betray) {
-                // Send the same message twice
-                M0 = M1;
-                // And forge one signature
-                if(new Random().nextBoolean())
-                    s0 = elGamalS_a.signBlock(new BigInteger(512, new Random()));
-                else
-                    s1 = elGamalS_a.signBlock(new BigInteger(512, new Random()));
-            }
 
             // send M_strich_0 := (M0 + k_{s xor 0}) mod p
             M0_dash = M0.add(s == 1 ? k1 : k0).mod(p);
@@ -147,12 +195,7 @@ public final class OT implements Protocol
 
     }
 
-    /** This is Bob. */
-    public void receiveFirst () {
-        //receive p,g,y
-        BigInteger p = new BigInteger(com.receive(),16);
-        BigInteger g = new BigInteger(com.receive(),16);
-        BigInteger y = new BigInteger(com.receive(),16);
+    public BigInteger otReceive() {
 
         //receive m0,m1
         BigInteger[] m= new BigInteger[2];
@@ -172,8 +215,7 @@ public final class OT implements Protocol
 
         
         //send q:= (crypt(k) + m_b) mod p^2
-        ElGamalCipher elgamal = new ElGamalCipher(p,g,y);
-        BigInteger q = elgamal.encipherBlock(k).add(m[b.intValue()]).mod(p.pow(2));
+        BigInteger q = elGamalC_other.encipherBlock(k).add(m[b.intValue()]).mod(p.pow(2));
         //BigInteger q = k.add(m[b.intValue()]).mod(p); // without elgamal for debugging
 
         System.out.println("q=" + q.toString(16));
@@ -208,24 +250,75 @@ public final class OT implements Protocol
 
         System.out.println("k_quer=" + k_quer.toString(16));
         System.out.println("k_quer2=" + k_quer2.toString(16));
-        
-        //check S_{b ^ 1} != k_quer (otherwise: betrayed!)
-        ElGamalSignature sign = new ElGamalSignature(p,g,y);
 
-        if (sign.verifyBlock(k_quer, S[b.xor(ONE).intValue()])) {
+        if (elGamalS_other.verifyBlock(k_quer, S[b.xor(ONE).intValue()])) {
             System.out.println("You have been betrayed!");
         }
         else {
             System.out.println("Congratulations! With a probability of 1/2 you were not betrayed!");
             System.out.println("The received secret is: " + M_sb);
             
-            if (sign.verifyBlock(k_quer2, S[b.intValue()])) {
+            if (elGamalS_other.verifyBlock(k_quer2, S[b.intValue()])) {
                 System.out.println("The signature was correct!");
             }
             else {
                 System.out.println("But the signature is wrong.");
             }
         }
+
+        return M_sb;
+
+    }
+
+    /** This ia Alice. */
+    public void sendFirst () {
+
+        boolean betray = true;
+
+        if(betray) {
+            System.out.println("betrayal incoming!");
+        }
+
+        int n = rand.nextInt(10);
+        int k = rand.nextInt(10);
+        int wordlen = 4;
+        int bitlen = (int) Math.ceil(wordlen * (Math.log(36) / Math.log(2)));
+
+        // generate n random words
+        BigInteger[] words_a = SecretSharing.genRandomWords(n*2, bitlen);
+        BigInteger[] words_b = new BigInteger[n/2];
+
+        tradeElGamal(true);
+
+        // Send 5 out of 10 secrets (but we don't know which, pairwise)
+        for(int i = 0; i < n; i += 2) {
+            otSend(words_a[i+0], words_a[i+1]);
+        }
+
+        // Receive bob's n/2 words.
+        for(int i = 0; i < n; i += 2) {
+            words_b[i] = otReceive();
+        }
+
+        // Words we're going to receive
+        BigInteger[] words_c = new BigInteger[n];
+
+        // ...
+
+        for(int i = 0; i < n; i += 2) {
+
+            if(words_c[i].equals(words_b[i]) || words_c[i+1].equals(words_b[i])) {
+                System.err.println("Error!");
+            }
+
+        }
+
+
+    }
+
+    /** This is Bob. */
+    public void receiveFirst () {
+
     }
     
     public String nameOfTheGame () {
