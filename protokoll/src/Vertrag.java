@@ -219,6 +219,145 @@ public final class Vertrag implements Protocol
 
     }
 
+    public boolean solvesPuzzle(BigInteger puzzle, BigInteger solution, BigInteger p_1) {
+        return M.modPow(solution, p_1).equals(puzzle);
+    }
+
+    public BigInteger[] shareSecrets(boolean first, final BigInteger[] words_1, final BigInteger[] puzzles_2, BigInteger p_1) throws Exception {
+
+        // set up some non-changing vars
+        final int n = words_1.length / 2;
+        final int n2 = n*2;
+        final int bitlen = p_1.bitLength();
+        // just hardcode this here.
+        final int k = 3;
+        final int to = first ? 1 : 0;
+
+
+        // those are the words we get from oblivious transfer to check against
+        BigInteger[] words_2 = new BigInteger[n];
+
+        if(first) {
+            // Send one of each secret pairs out of 10 secrets (but we don't know which, pairwise)
+            for(int i = 0; i < n2; i += 2) {
+                otSend(to, words_1[i+0], words_1[i+1]);
+            }
+
+            // Receive bob's n/2 words using 1-2 OT
+            for(int i = 0; i < n; i++) {
+                words_2[i] = otReceive(to);
+                // Check if we have a matching puzzle
+                if(!solvesPuzzle(puzzles_2[i*2+0], words_2[i], p_1) && !solvesPuzzle(puzzles_2[i*2+1], words_2[i], p_1))
+                    throw new Exception("no matching puzzle!");
+            }
+        } else {
+            // Receive alice's n/2 words using 1-2 OT
+            for(int i = 0; i < n; i++) {
+                words_2[i] = otReceive(to);
+                // Check if we have a matching puzzle
+                if(!solvesPuzzle(puzzles_2[i*2+0], words_2[i], p_1) && !solvesPuzzle(puzzles_2[i*2+1], words_2[i], p_1))
+                    throw new Exception("no matching puzzle!");
+            }
+
+            // Send one of each secret pairs out of 10 secrets (but we don't know which, pairwise)
+            for(int i = 0; i < n2; i += 2) {
+                otSend(to, words_1[i+0], words_1[i+1]);
+            }
+        }
+
+        if(first)
+            com.sendTo(to, "ot check.");
+        else
+            System.out.println(com.receive());
+
+        // Secrets to send and receive
+        SecretReceive[] secretsReceive = new SecretReceive[n2];
+        SecretSend[] secretsSend = new SecretSend[n2];
+        for (int i = 0; i < n2; i++) {
+            secretsSend[i] = new SecretSend(words_1[i], k, bitlen);
+            secretsReceive[i] = new SecretReceive(k);
+        }
+
+        int k2 = k;
+        while(true) { // Assuming that all secrets have equal length
+
+            for (int i = 0; i < (int)Math.pow(2, k); i++) {
+                if(first) {
+                    // send secret parts
+                    for (int j = 0; j < n2; j++) {
+                        int y = secretsSend[j].y();
+                        com.sendTo(to, Integer.toString(y, 16));
+                    }
+                    // receive secret parts
+                    for (int j = 0; j < n2; j++) {
+                        int y = Integer.parseInt(com.receive(), 16);
+                        secretsReceive[j].notY(y);
+                    }
+                } else {
+                    // receive secret parts
+                    for (int j = 0; j < n2; j++) {
+                        int y = Integer.parseInt(com.receive(), 16);
+                        secretsReceive[j].notY(y);
+                    }
+                    // send secret parts
+                    for (int j = 0; j < n2; j++) {
+                        int y = secretsSend[j].y();
+                        com.sendTo(to, Integer.toString(y, 16));
+                    }
+                }
+            }
+
+            if(k2 == bitlen)
+                break;
+
+            // expand all prefixes
+            for (int j = 0; j < n2; j++) {
+                secretsSend[j].nextRound();
+                secretsReceive[j].nextRound();
+            }
+
+            // Output some progress
+            System.out.println(k2 + " / " + bitlen);
+
+            k2 += 1;
+        }
+
+        if(first)
+            com.sendTo(1, "2^k check.");
+        else
+            System.out.println(com.receive());
+
+        // Now 2^k possiblities should be left for each secret. lets exclude the 2^k - 1 remaining ones
+        for (int i = 0; i < (int) Math.pow(2, k) -1; i++) {
+            for (int j = 0; j < n2; j++) {
+                if(first) {
+                    com.sendTo(to, Integer.toString(secretsSend[j].yOverride(), 16));
+                    secretsReceive[j].notY(Integer.parseInt(com.receive(), 16));
+                } else {
+                    secretsReceive[j].notY(Integer.parseInt(com.receive(), 16));
+                    com.sendTo(to, Integer.toString(secretsSend[j].yOverride(), 16));
+                }
+            }
+        }
+
+        if(first)
+            com.sendTo(1, "trading check.");
+        else
+            System.out.println(com.receive());
+
+        // Check if they match
+        BigInteger[] keys_2 = new BigInteger[n2];
+        for(int i = 0; i < n2; i++) {
+            keys_2[i] = secretsReceive[i].solve();
+            if(!solvesPuzzle(puzzles_2[i], keys_2[i], p_1))
+                throw new Exception("Received a bad key!");
+        }
+
+        // A'right! Return this shit!
+        return keys_2;
+
+    }
+
     public static BigInteger[] genRandomPHKeys(int n, BigInteger p_a) {
 
         BigInteger[] ret = new BigInteger[n];
@@ -261,15 +400,17 @@ public final class Vertrag implements Protocol
         }
     }
 
+    BigInteger M;
+
     /** This ia Alice. */
     public void sendFirst () {
 
         tradeElGamal(true);
         com.sendTo(1, "elgamal check.");
 
-        final int n = rand.nextInt(10)+1;
+        final int n = 4; // rand.nextInt(10)+1;
         final BigInteger p_a = new BigInteger(52, 100, rand);
-        final BigInteger M; {
+        {
              BigInteger tmp;
              do {
                  tmp = new BigInteger(p_a.bitLength()-8, rand);
@@ -286,13 +427,15 @@ public final class Vertrag implements Protocol
         // generate pohlig hellman puzzles
         final BigInteger[] keys_a = Vertrag.genRandomPHKeys(n*2, p_a);
         final BigInteger[] puzzles_a = Vertrag.genPHPuzzles(keys_a, M, p_a);
-        final BigInteger[] puzzles_b = new BigInteger[n];
+        final BigInteger[] puzzles_b = new BigInteger[n*2];
 
         // trade puzzles
-        for(int i = 0; i < n; i++) {
+        for(int i = 0; i < n*2; i+=2) {
             // send every second puzzle
-            com.sendTo(1, puzzles_a[i*2].toString(16));
-            puzzles_b[i] = new BigInteger(com.receive(), 16);
+            com.sendTo(1, puzzles_a[i+0].toString(16));
+            com.sendTo(1, puzzles_a[i+1].toString(16));
+            puzzles_b[i+0] = new BigInteger(com.receive(), 16);
+            puzzles_b[i+1] = new BigInteger(com.receive(), 16);
         }
 
         {
@@ -310,7 +453,7 @@ public final class Vertrag implements Protocol
         {
             BigInteger signature_b = new BigInteger(com.receive(), 16);
 
-            if(elGamalS_other.verifyBlock(genDigest(vertrag_b), signature_b)) {
+            if(!elGamalS_other.verifyBlock(genDigest(vertrag_b), signature_b)) {
                 // NONONONONO
                 com.sendTo(1, "1");
                 System.err.println("That's not bob's signature!");
@@ -328,7 +471,26 @@ public final class Vertrag implements Protocol
 
         }
 
+        com.sendTo(1, "secrets check");
+
         // Trade puzzles using the Geheimnisaustausch thingie.
+        try {
+
+            BigInteger[] keys_b = shareSecrets(true, keys_a, puzzles_b, p_b);
+
+            System.out.println("Checking solutions: ");
+            for(int i = 0; i < n*2; i++) {
+                if(!solvesPuzzle(puzzles_b[i], keys_b[i], p_b))
+                    throw new Exception("Could not solve puzzle B_{" + i/2 + "," + (i%2+1) + "}!");
+                System.out.print(".");
+            }
+            System.out.println();
+            System.out.println("Looking good!");
+
+        } catch(Exception e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
 
     }
 
@@ -340,7 +502,7 @@ public final class Vertrag implements Protocol
 
         final int n = Integer.parseInt(com.receive(), 16);
         final BigInteger p_a = new BigInteger(com.receive(), 16);
-        final BigInteger M = new BigInteger(com.receive(), 16);
+        M = new BigInteger(com.receive(), 16);
 
         final BigInteger p_b = new BigInteger(52, 100, rand);
 
@@ -351,11 +513,13 @@ public final class Vertrag implements Protocol
         final BigInteger[] puzzles_b = Vertrag.genPHPuzzles(keys_b, M, p_b);
 
         // trade puzzles
-        final BigInteger[] puzzles_a = new BigInteger[n];
-        for(int i = 0; i < n; i++) {
-            puzzles_a[i] = new BigInteger(com.receive(), 16);
-            // send every second
-            com.sendTo(0, puzzles_b[i*2].toString(16));
+        final BigInteger[] puzzles_a = new BigInteger[n*2];
+        for(int i = 0; i < n*2; i+=2) {
+            // send every second puzzle
+            puzzles_a[i+0] = new BigInteger(com.receive(), 16);
+            puzzles_a[i+1] = new BigInteger(com.receive(), 16);
+            com.sendTo(0, puzzles_b[i+0].toString(16));
+            com.sendTo(0, puzzles_b[i+1].toString(16));
         }
 
         {
@@ -373,7 +537,7 @@ public final class Vertrag implements Protocol
                 com.sendTo(0, signature_a.toString(16));
             }
 
-            if(elGamalS_other.verifyBlock(genDigest(vertrag_a), signature_a)) {
+            if(!elGamalS_other.verifyBlock(genDigest(vertrag_a), signature_a)) {
                 // NONONONONO
                 com.sendTo(0, "1");
                 System.err.println("That's not alice's signature!");
@@ -387,10 +551,28 @@ public final class Vertrag implements Protocol
             }
 
             // Commence operation.
-            com.sendTo(1, "0");
+            com.sendTo(0, "0");
         }
 
+        System.out.println(com.receive());
+
         // Trade puzzles using the Geheimnisaustausch thingie.
+        try {
+            BigInteger[] keys_a = shareSecrets(false, keys_b, puzzles_a, p_a);
+
+            System.out.println("Checking solutions: ");
+            for(int i = 0; i < n*2; i++) {
+                if(!solvesPuzzle(puzzles_a[i], keys_a[i], p_a))
+                    throw new Exception("Could not solve puzzle A_{" + i/2 + "," + (i%2+1) + "}!");
+                System.out.print(".");
+            }
+            System.out.println();
+            System.out.println("Looking good!");
+
+        } catch(Exception e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
 
     }
 
